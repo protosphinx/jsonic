@@ -114,8 +114,8 @@ Jsonic's ecosystem is built on the Jsonic Virtual Machine (JVM) which will in th
 ### 2.1 Overview of Jsonic Components
 Jsonic is designed to deliver a scalable, efficient, and secure solution for various business applications. Its innovative structure consists of a main-chain and multiple side-chains. On Jsonic, businesses assume pseudonymous identity and record their business transactions on-chain within the network. Pseudonymous identity allows companies to make their business activities public without disclosing their real identity. This serves as a mechanism to publicly validate business transactions in a pseudonymous manner. This allows a company to gain benefits in ways similar to public listing on a stock exchange.
 
+![Image 2.1](https://i.ibb.co/dLH2BYg/2-1.png)
 
-https://excalidraw.com/#json=psPlO7X-BKZgDidcP7wDN,ILRgG96IxHfiuFEtBrzuKg
 ### 2.2 Definitions and Abbreviations
 
   + **IRL**: IRL (in real life) is an abbreviation used to explain when a person is speaking about something real and outside the digital world of communication, gaming or virtual reality.
@@ -199,7 +199,8 @@ The JVM enables the execution of smart contracts and the verification of transac
 In summary, Jsonic's blockchain architecture has been designed to provide a scalable, efficient, and secure platform for various business applications. Its innovative structure, which encompasses a main-chain and multiple side-chains, along with the POT mechanism and the JVM, ensures that the Jsonic ecosystem can meet the demands of the Web3 era while overcoming the limitations of traditional blockchain systems.
 
 ## Section 3: Jsonic Ecosystem Components and Proof of Transaction (POT) Validation
-https://excalidraw.com/#json=0c9SNBdkk_IOVykNjQL0U,c73LPoR0m8RcsaFOzZS65w
+
+![Image 3.0](https://i.ibb.co/H7mg23d/3-0.png)
 
 The diagram illustrates the Jsonic ecosystem, featuring various components. At the center of the diagram is the Jsonic Virtual Machine (JVM), also known as the Jsonic Network. This network comprises three DAOs: D1, D2, and D3. Each DAO is associated with a corresponding side-chain, which is responsible for recording transactions and maintaining the balance sheet specific to that DAO. Alongside the side-chains, there is a main-chain that periodically captures snapshots of the balance sheets from all three side-chains.
 
@@ -218,7 +219,7 @@ Transactions under each block of side-chain are converted into a Merkle tree and
 
 ### 3.4 Side-chain block structure
 
-https://excalidraw.com/#json=vFuQ2bxZnupfgTgluj3wk,FcsFBaaZDvmxnfmaMPbTSQ
+![Alt Text](https://i.ibb.co/pxVdJzY/3-4.png)
 
 Following information is part a side-chain block:
 
