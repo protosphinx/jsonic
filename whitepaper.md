@@ -1,9 +1,57 @@
-# Jsonic
-#### A blockchain based system for validation and valuation of business transactions among Decentralized Autonomous Organizations.
+<div align="center">
+	<img width="200" src="https://assets.super.so/63e41760-ede1-46f2-930c-5c7a8b227a15/uploads/logo/843ce395-b953-444b-bdbd-b9ee08e8153f.svg" />
+</div>
 
-© Original copyright protected work of [@protosphinx](https://twitter.com/protosphinx) 2023-05-17
+<h1 align="center">Jsonic Whitepaper</h1>
 
+<div align="center">
+ <strong>
+   A blockchain based system for validation and valuation of business transactions among Decentralized Autonomous Organizations.
+ </strong>
+</div>
+
+<br />
+
+<div align="center">
+  <br>
+  <!-- Discourse -->
+  <a href="https://jsonic.org/">
+    <img src="https://assets-global.website-files.com/6257adef93867e50d84d30e2/636e0a6a49cf127bf92de1e2_icon_clyde_blurple_RGB.png" alt="chat" height="18"/>
+  </a>
+  <!-- Twitter -->
+  <a href="https://twitter.com/jsonicHQ">
+    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/6/6f/Logo_of_Twitter.svg/512px-Logo_of_Twitter.svg.png?20220821125553" alt="Twitter" height="18">
+  </a>
+  <br>
+  <br>
+    <!-- License -->
+  <a href="https://github.com/protosphinx/jsonic/blob/main/README.md">
+    <img src="https://img.shields.io/github/license/CirclesUBI/whitepaper?style=flat-square&color=%23cc1e66" alt="License" height="18">
+  </a>
+</div>
+
+<div align="center">
+  <h3>
+    <a href="https://discord.gg/IndiaTech">
+      Community
+    </a>
+    <span> | </span>
+    <a href="https://jsonic.org">
+      Website
+    </a>
+    <span> | </span>
+    <a href="https://jsonic.org/">
+      Contribute
+    </a>
+  </h3>
+</div>
+
+<br/>
+
+## Abstract
 _This paper presents an abstract of the Jsonic ecosystem, a blockchain platform designed to revolutionize business transactions in the Web3 era. It provides an overview of Jsonic's architecture, consensus mechanism, governance model, tokenomics, and incentives. The paper highlights the platform's interoperability with existing business systems, supported by its API and SDK. It also discusses ongoing research and development efforts, planned upgrades, and future features, such as e-invoicing, payment processing, project management, and more. Jsonic's long-term vision is to become the standard platform for businesses, with all transactions recorded on the blockchain and the Jsonic token reflecting the market cap of businesses. By fostering transparency, trust, and economic growth, Jsonic aims to redefine traditional GDP measurements and create a more inclusive global business landscape._
+
+**Authors**: Original copyright protected work of [@protosphinx](https://twitter.com/protosphinx), Somesh Mishra, Brajesh, TK TK 2023-05-17
 
 ## Table of Contents
 
