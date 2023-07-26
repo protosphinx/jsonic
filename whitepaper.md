@@ -1,14 +1,18 @@
-<div align="center">
-    <img width="200" src="https://assets.super.so/63e41760-ede1-46f2-930c-5c7a8b227a15/uploads/logo/843ce395-b953-444b-bdbd-b9ee08e8153f.svg" />
-</div>
+<p align="center">
+  <a href="https://nextjs.org">
+    <picture>
+      <source media="(prefers-color-scheme: dark)" srcset="assets/brand/logo-jsconic-horizontal.svg">
+      <img src="assets/brand/logo-jsconic-text-color.svg" height="45">
+    </picture>
+    <h1 align="center">Jsonic Whitepaper</h1>
+  </a>
+</p>
 
-<h1 align="center">Jsonic Whitepaper</h1>
-
-<div align="center">
+<p align="center">
  <strong>
    A blockchain based system for validation and valuation of business transactions among Decentralized Autonomous Organizations.
  </strong>
-</div>
+</p>
 
 <br />
 
@@ -117,8 +121,7 @@ Jsonic's ecosystem is built on the Jsonic Virtual Machine (JVM) which will in th
 Jsonic is designed to deliver a scalable, efficient, and secure solution for various business applications. Its innovative structure consists of a main-chain and multiple side-chains. On Jsonic, businesses assume pseudonymous identity and record their business transactions on-chain within the network. Pseudonymous identity allows companies to make their business activities public without disclosing their real identity. This serves as a mechanism to publicly validate business transactions in a pseudonymous manner. This allows a company to gain benefits in ways similar to public listing on a stock exchange.
 
 
-![jsonic-blockchain-architecture-overview-of-jsonic-components](https://github.com/protosphinx/jsonic/assets/133899485/a7f057b2-c3f0-430a-af95-f0f75a247802)
-[Source](https://excalidraw.com/#json=psPlO7X-BKZgDidcP7wDN,ILRgG96IxHfiuFEtBrzuKg)
+![2.1 Overview of Jsonic Components Diagram](assets/whitepaper/diagram-overview-jasonic-components.png)
 
 
 ### 2.2 Definitions and Abbreviations
@@ -212,11 +215,7 @@ In summary, Jsonic's blockchain architecture has been designed to provide a scal
 
 ## Section 3: Jsonic Ecosystem Components and Proof of Transaction (POT) Validation
 
-![jsonic-ecosystem-components-and-proof-of-transaction-(pot)-validation](https://github.com/protosphinx/jsonic/assets/1670383/90b04d55-99d8-400d-8a9b-1a4385314d56)
-
-
-[Source](https://excalidraw.com/#json=0c9SNBdkk_IOVykNjQL0U,c73LPoR0m8RcsaFOzZS65w)
-
+![3.0 Jsonic Ecosystem Components and Proof of Transaction (POT) Validation Diagram](assets/whitepaper/diagram-jsonic-ecosystem.png)
 
 The diagram illustrates the Jsonic ecosystem, featuring various components. At the center of the diagram is the Jsonic Virtual Machine (JVM), also known as the Jsonic Network. This network comprises three DAOs: D1, D2, and D3. Each DAO is associated with a corresponding side-chain, which is responsible for recording transactions and maintaining the balance sheet specific to that DAO. Alongside the side-chains, there is a main-chain that periodically captures snapshots of the balance sheets from all three side-chains.
 
@@ -240,7 +239,7 @@ Transactions under each block of side-chain are converted into a Merkle tree and
 
 ### 3.4 Side-chain block structure
 
-![Alt Text](https://i.ibb.co/pxVdJzY/3-4.png)
+![3.4 Side Chain Block Structure Diagram](assets/whitepaper/diagram-side-chain-block-structure.png)
 
 Following information is part a side-chain block:
 
