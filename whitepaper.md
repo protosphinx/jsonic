@@ -52,12 +52,14 @@
 
 <br/>
 
-## Abstract
+<h1>Abstract</h1>
+
 _This paper presents an abstract of the Jsonic ecosystem, a blockchain platform designed to revolutionize business transactions in the Web3 era. It provides an overview of Jsonic's architecture, consensus mechanism, governance model, tokenomics, and incentives. The paper highlights the platform's interoperability with existing business systems, supported by its API and SDK. It also discusses ongoing research and development efforts, planned upgrades, and future features, such as e-invoicing, payment processing, project management, and more. Jsonic's long-term vision is to become the standard platform for businesses, with all transactions recorded on the blockchain and the Jsonic token reflecting the market cap of businesses. By fostering transparency, trust, and economic growth, Jsonic aims to redefine traditional GDP measurements and create a more inclusive global business landscape._
 
 **Authors**: Original copyright protected work of [@protosphinx](https://twitter.com/protosphinx), Somesh Mishra, Brajesh, TK TK 2023-05-17
 
-## Table of Contents
+<h1>Table of Contents</h1>
+
 - [Section 1: Introduction](#section-1-introduction)
   - [1.1 Background and Motivation](#11-background-and-motivation)
 - [Section 2: Jsonic Blockchain Architecture](#section-2-jsonic-blockchain-architecture)
@@ -97,8 +99,6 @@ _This paper presents an abstract of the Jsonic ecosystem, a blockchain platform 
   - [6.3 Community Engagement and Ecosystem Growth](#63-community-engagement-and-ecosystem-growth)
   - [6.4 Long-term Vision](#64-long-term-vision)
 
-
-
 ## Section 1: Introduction
 
 ### 1.1 Background and Motivation
@@ -119,35 +119,33 @@ Jsonic's ecosystem is built on the Jsonic Virtual Machine (JVM) which will in th
 
 Jsonic is designed to deliver a scalable, efficient, and secure solution for various business applications. Its innovative structure consists of a main-chain and multiple side-chains. On Jsonic, businesses assume pseudonymous identity and record their business transactions on-chain within the network. Pseudonymous identity allows companies to make their business activities public without disclosing their real identity. This serves as a mechanism to publicly validate business transactions in a pseudonymous manner. This allows a company to gain benefits in ways similar to public listing on a stock exchange.
 
-
 ![2.1 Overview of Jsonic Components Diagram](assets/whitepaper/diagram-overview-jasonic-components.png)
-
 
 ### 2.2 Definitions and Abbreviations
 
- + **IRL**: IRL (in real life) is an abbreviation used to explain when a person is speaking about something real and outside the digital world of communication, gaming or virtual reality.
+ - **IRL**: IRL (in real life) is an abbreviation used to explain when a person is speaking about something real and outside the digital world of communication, gaming or virtual reality.
 
- + **JVM**: JVM, which stands for Jsonic Virtual Machine, is an active instance of the Jsonic application running on each user device. The JVM acts as a virtual environment where smart contracts are executed, data is processed, and calculations take place.
+ - **JVM**: JVM, which stands for Jsonic Virtual Machine, is an active instance of the Jsonic application running on each user device. The JVM acts as a virtual environment where smart contracts are executed, data is processed, and calculations take place.
 
- + **Node**: A node refers to an electronic device that is connected to the Jsonic network and runs the JVM. This can include devices such as mobile phones, tablets, computers, or any hardware capable of connecting to the internet and running the JVM.
+ - **Node**: A node refers to an electronic device that is connected to the Jsonic network and runs the JVM. This can include devices such as mobile phones, tablets, computers, or any hardware capable of connecting to the internet and running the JVM.
 
- + **DAO**: DAO, short for Decentralized Autonomous Organization, represents a business entity within the Jsonic network. A DAO consists of a group of nodes that serve the business and maintain its on-chain data.
+ - **DAO**: DAO, short for Decentralized Autonomous Organization, represents a business entity within the Jsonic network. A DAO consists of a group of nodes that serve the business and maintain its on-chain data.
 
- + **User**: A user is an individual who is a member of the Jsonic network. To be a user, one must be a member of at least one DAO, although it is possible to be part of multiple DAOs.
+ - **User**: A user is an individual who is a member of the Jsonic network. To be a user, one must be a member of at least one DAO, although it is possible to be part of multiple DAOs.
 
- + **Transaction**: A transaction refers to a business transaction among one or more DAOs involving one of the supported transaction types, which currently include invoices and payments.
+ - **Transaction**: A transaction refers to a business transaction among one or more DAOs involving one of the supported transaction types, which currently include invoices and payments.
 
- + **Heartbeat**: A fixed time interval at which each JVM instance, i.e. each node, confirms its liveness to the network.
+ - **Heartbeat**: A fixed time interval at which each JVM instance, i.e. each node, confirms its liveness to the network.
 
- + **Solstice**: Solstice serves as an analogy to the end of an IRL financial year. A Solstice occurs at a Solstice interval that is an integer multiple of the Heartbeat. Solstice is the point in time when a block is added to the main-chain.
+ - **Solstice**: Solstice serves as an analogy to the end of an IRL financial year. A Solstice occurs at a Solstice interval that is an integer multiple of the Heartbeat. Solstice is the point in time when a block is added to the main-chain.
 
- + **Materiality**: Materiality represents a percentage of the total value of existing transactions on a side-chain. When a set of new transactions exceeds this Materiality threshold in terms of value, a block is added to the side-chain.
+ - **Materiality**: Materiality represents a percentage of the total value of existing transactions on a side-chain. When a set of new transactions exceeds this Materiality threshold in terms of value, a block is added to the side-chain.
 
- + **POT**: The Proof of Transaction, in short POT, mechanism checks whether a transaction recorded on-chain by a DAO is well-formed and complete.
+ - **POT**: The Proof of Transaction, in short POT, mechanism checks whether a transaction recorded on-chain by a DAO is well-formed and complete.
 
- + **Adrenaline**: Adrenaline serves as a measure of the speed of the heartbeat. With a higher number of participants, there is an increase in incoming transactions per Heartbeat. Consequently, a larger volume of transactions necessitates a dose of Adrenaline (an increment in value), leading to a reduction in the value of the Heartbeat interval. This adjustment ensures that the number of transactions processed per Heartbeat remains consistent.
+ - **Adrenaline**: Adrenaline serves as a measure of the speed of the heartbeat. With a higher number of participants, there is an increase in incoming transactions per Heartbeat. Consequently, a larger volume of transactions necessitates a dose of Adrenaline (an increment in value), leading to a reduction in the value of the Heartbeat interval. This adjustment ensures that the number of transactions processed per Heartbeat remains consistent.
 
- + **Anxiety**: Anxiety represents the proportion of invalid or incomplete transactions recorded by the DAOs on their chains. The Anxiety value lies within the open interval (0,1), where a lower value indicates a healthier state of the ecosystem. For instance, if DAO1 logs a transaction with DAO2, but DAO2 does not recognize the transaction, it contributes to an increase in improper transactions within a Heartbeat, subsequently raising the Anxiety level. Looking at it differently, a high Anxiety value is an indicator of low relevance transactions into the system.
+ - **Anxiety**: Anxiety represents the proportion of invalid or incomplete transactions recorded by the DAOs on their chains. The Anxiety value lies within the open interval (0,1), where a lower value indicates a healthier state of the ecosystem. For instance, if DAO1 logs a transaction with DAO2, but DAO2 does not recognize the transaction, it contributes to an increase in improper transactions within a Heartbeat, subsequently raising the Anxiety level. Looking at it differently, a high Anxiety value is an indicator of low relevance transactions into the system.
 
 ### 2.3 DAO
 
@@ -211,7 +209,6 @@ The JVM enables the execution of smart contracts and the verification of transac
 
 In summary, Jsonic's blockchain architecture has been designed to provide a scalable, efficient, and secure platform for various business applications. Its innovative structure, which encompasses a main-chain and multiple side-chains, along with the POT mechanism and the JVM, ensures that the Jsonic ecosystem can meet the demands of the Web3 era while overcoming the limitations of traditional blockchain systems.
 
-
 ## Section 3: Jsonic Ecosystem Components and Proof of Transaction (POT) Validation
 
 ![3.0 Jsonic Ecosystem Components and Proof of Transaction (POT) Validation Diagram](assets/whitepaper/diagram-jsonic-ecosystem.png)
@@ -242,33 +239,33 @@ Transactions under each block of side-chain are converted into a Merkle tree and
 
 Following information is part a side-chain block:
 
-* **Block Header**
+- **Block Header**
 
-  * Slot: The slot number in the side-chain where the block is included. It’s calculated by combining the previous slot number and the number of Heartbeats since the previous block was added.
+  - Slot: The slot number in the side-chain where the block is included. It’s calculated by combining the previous slot number and the number of Heartbeats since the previous block was added.
 
-  * Parent Slot: The slot number of the previous block.
+  - Parent Slot: The slot number of the previous block.
 
-  * Block Height: The height of the block in the blockchain i.e. the position of the block within the sequence of blocks. Height is 0 for genesys block, and gets incremented by 1 for each subsequent block.
+  - Block Height: The height of the block in the blockchain i.e. the position of the block within the sequence of blocks. Height is 0 for genesys block, and gets incremented by 1 for each subsequent block.
 
-  * State Root Hash: The Merkle root hash of the side-chain state i.e. Balance Sheet, after processing all the transactions in the block.
+  - State Root Hash: The Merkle root hash of the side-chain state i.e. Balance Sheet, after processing all the transactions in the block.
 
-  * Transaction Root Hash: The Merkle root hash of the transactions included in the block.
+  - Transaction Root Hash: The Merkle root hash of the transactions included in the block.
 
-  * Timestamp: The timestamp indicating when the block was created.
+  - Timestamp: The timestamp indicating when the block was created.
 
-  * Block Hash: The hash of the block header.
+  - Block Hash: The hash of the block header.
 
-  * Previous Block Hash: The hash of the previous block's header.
+  - Previous Block Hash: The hash of the previous block's header.
 
-  * Block Signature: The cryptographic signature of the block, produced by the block producer DAO who created the block. It helps ensure the authenticity and integrity of the block.
+  - Block Signature: The cryptographic signature of the block, produced by the block producer DAO who created the block. It helps ensure the authenticity and integrity of the block.
 
-* **Transactions**
+- **Transactions**
 
-  * List of Transactions: The actual transactions included in the block. Each transaction represents an action, operation, or smart contract interactions on-chain.
+  - List of Transactions: The actual transactions included in the block. Each transaction represents an action, operation, or smart contract interactions on-chain.
 
-* **State**
+- **State**
 
-  * Balance Sheet: The balance sheet of the DAO as the time of block creation. The current state of the balance sheet is calculated from the previous balance sheet  after adjusting the balances as per the transactions made side last block.
+  - Balance Sheet: The balance sheet of the DAO as the time of block creation. The current state of the balance sheet is calculated from the previous balance sheet  after adjusting the balances as per the transactions made side last block.
 
 ### 3.5 Main-Chain
 
@@ -282,35 +279,33 @@ Additionally, at Solstice, the transactions recorded by a DAO (let's say D) are 
 
 Following information is part a main-chain block:
 
-* **Block Header**
+- **Block Header**
 
-  * Slot: The slot number in the blockchain where the block is included. It’s calculated by combining the previous slot number and the number of Heartbeats since the previous block was added.
+  - Slot: The slot number in the blockchain where the block is included. It’s calculated by combining the previous slot number and the number of Heartbeats since the previous block was added.
 
-  * Parent Slot: The slot number of the previous block.
+  - Parent Slot: The slot number of the previous block.
 
-  * Block Height: The height of the block in the blockchain i.e. the position of the block within the sequence of blocks. Height is 0 for genesys block, and gets incremented by 1 for each subsequent block.
+  - Block Height: The height of the block in the blockchain i.e. the position of the block within the sequence of blocks. Height is 0 for genesys block, and gets incremented by 1 for each subsequent block.
 
-  * Record Root Hash: The Merkle root hash of the records included in the block.
+  - Record Root Hash: The Merkle root hash of the records included in the block.
 
-  * Timestamp: The timestamp indicating when the block was created.
+  - Timestamp: The timestamp indicating when the block was created.
 
-  * Block Hash: The hash of the block header.
+  - Block Hash: The hash of the block header.
 
-  * Previous Block Hash: The hash of the previous block's header.
+  - Previous Block Hash: The hash of the previous block's header.
 
-  * Block Signature: The cryptographic signature of the block, produced by the block producer or validator who created the block. It helps ensure the authenticity and integrity of the block.
+  - Block Signature: The cryptographic signature of the block, produced by the block producer or validator who created the block. It helps ensure the authenticity and integrity of the block.
 
-* **Records**
+- **Records**
 
-  * Records: Each record is either the hash of a side-chain’s latest block at the time of block creation, or a result of smart contract interactions.
+  - Records: Each record is either the hash of a side-chain’s latest block at the time of block creation, or a result of smart contract interactions.
 
-* **Rewards**
+- **Rewards**
 
-  * Validator Rewards: The rewards earned by the validators for participating in block production and consensus.
+  - Validator Rewards: The rewards earned by the validators for participating in block production and consensus.
 
-  * DAO Rewards: The rewards earned by the DAOs for contributing to the network by logging their business transactions.
-
-
+  - DAO Rewards: The rewards earned by the DAOs for contributing to the network by logging their business transactions.
 
 ### 3.7 Jsonic Virtual Machine (JVM)
 
@@ -343,7 +338,6 @@ By utilizing smart contracts, the invoicing process becomes more efficient and t
 To support the development and deployment of smart contracts, Jsonic offers a comprehensive suite of developer tools and resources. These tools enable developers to build, test, and deploy smart contracts within the Jsonic ecosystem, facilitating the seamless integration of blockchain-based solutions into business operations.
 
 In this section, we have explored the Jsonic Virtual Machine, the role of smart contracts in the Jsonic ecosystem, and the various use cases for Jsonic's smart contracts. By providing a robust and efficient platform for executing smart contracts, Jsonic aims to revolutionize the way businesses conduct transactions in the Web3 era.
-
 
 ## Section 4: Tokenomics and Incentives in the Jsonic Ecosystem
 
@@ -449,14 +443,11 @@ The said probability can be influenced by the following factors:
 
     For example, DAO-1 has transacted on invoice-1 earlier, and there are about 100 DAOs who have transacted invoice-1 followed by invoice-2, but invoice-1 is the only invoice they have transacted that is common with the invoices that DAO-1 has transacted. If one considers only the first factor, the probability of DAO-1 transaction on invoice-2 would increase. But since the 100 DAOs are not correlated to DAO-1 in that they do not have a large number of transacted invoices in common, their influence on the said probability should decrease. Therefore we take into consideration a factor of correlation between two DAOs. For example, if DAO-2 and DAO-3 have a lot of invoices they have transacted in common; DAO-3 will influence DAO-2’s probability of transition from a previously transacted invoice to the current one more than other DAOs.
 
-
 3. The third factor we take into consideration is the nearness of other DAOs to the said DAO in the relationship network. Continuing with the previous example, we can see that DAO-3 should influence DAO-2’s decision of transaction the invoice more if he is an associate of DAO-2 rather than if he was an associate of an associate of DAO-2.
 
     Said probabilities are calculated by accessing the invoice database D, which consists of lists of invoices transacted by each DAO of the relationship network and which is stored in the merchant's device’s memory.
 
-
     Step 1. From the Invoice database which corresponds to the invoice interaction history data 134 shown in Figure 1, find the invoice that DAO X transacted last and call this invoice B.
-
 
     Step 2.1. Prepare a list of DAOs who transacted on invoice $A$ and call it $L_A$.
 
@@ -472,7 +463,6 @@ Compute:
 $$S_x=\frac{1}{\lambda}\left[\sum^2_{k=0}\frac{1}{\lambda+k}*n_{\lambda+k}\right]$$
 
 Here $S_x$ is a metric denoting the strength of the linkage between $x$ and $X$.
-
 
 Step 3. From the Invoice-database calculate
 
@@ -490,7 +480,6 @@ Where ${\omega}(d_x, S_x)$ is a weight function depending on distance of $x$ fro
 
 $$Token\ value\ allocated\ at\ Solstice= Relevance\ Score\ *\ Value\ of\ Invoices\ in\ the\ block$$
 
-
 ## Section 5: Jsonic Ecosystem and Integration with Existing Business Systems
 
 ### 5.1 Interoperability with Existing Infrastructure
@@ -507,7 +496,6 @@ Jsonic is designed to support cross-chain communication, allowing for the seamle
 Jsonic is committed to ensuring compliance with existing regulations and industry standards. The Jsonic platform includes built-in compliance mechanisms that facilitate adherence to various regulatory requirements, such as KYC (Know Your Customer) and AML (Anti-Money Laundering) protocols. Additionally, Jsonic provides tools for businesses to maintain detailed audit trails and documentation, ensuring transparency and accountability.
 
 In this section, we have discussed the integration capabilities of the Jsonic ecosystem with existing business systems. Jsonic's flexible architecture, robust API and SDK, cross-chain communication, and compliance mechanisms enable businesses to adopt blockchain technology seamlessly, enhancing their operations and harnessing the benefits of decentralization.
-
 
 ## Section 6: Future Developments and Roadmap for the Jsonic Ecosystem
 ### 6.1 Ongoing Research and Development
