@@ -465,7 +465,7 @@ The said probability can be influenced by the following factors:
     Step 2.3. For each DAO $x{\varepsilon}L_A$, from the relationship network graph G, find the shortest path between $x$ and $X$, let its length be denoted by ${\lambda}$. Let $M$ denote the Adjacency-matrix of graph G.
     Compute $M_{\lambda}$ and let $n_{\lambda}$ denote its $(i,j)$<sup>th</sup> entry, where $x$ is the i<sup>th</sup> node and $X$ is the j<sup>th</sup> node in the Adjacency matrix M. Here $n$ denotes the number of paths of length ${\lambda}$.
 
-Similarly, find $n_{{\lambda}+1}$ and $n_{{\lambda}+2}$ from $M_{{\lambda}+1}$ and $M_{{\lambda}+2}$.
+Similarly, find $n_{\lambda+1}$ and $n_{\lambda+2}$ from $M_{\lambda+1}$ and $M_{\lambda+2}$.
 
 Compute:
 
