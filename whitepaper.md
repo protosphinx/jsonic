@@ -58,7 +58,6 @@ _This paper presents an abstract of the Jsonic ecosystem, a blockchain platform 
 **Authors**: Original copyright protected work of [@protosphinx](https://twitter.com/protosphinx), Somesh Mishra, Brajesh, TK TK 2023-05-17
 
 ## Table of Contents
-
 - [Section 1: Introduction](#section-1-introduction)
   - [1.1 Background and Motivation](#11-background-and-motivation)
 - [Section 2: Jsonic Blockchain Architecture](#section-2-jsonic-blockchain-architecture)
@@ -348,7 +347,7 @@ In this section, we have explored the Jsonic Virtual Machine, the role of smart 
 
 ## Section 4: Tokenomics and Incentives in the Jsonic Ecosystem
 
-### 4.1. Token Minting
+### 4.1 Token Minting
 Token minting in the Jsonic ecosystem occurs at Solstice upon successful creation of a main-chain block. The amount and value of tokens to mint and assign, is determined with the DAO valuation method (explained in section 4.2) which is similar to the PageRank method in terms of the use of Spectral Graph Theory applied to B2B transactions. This token minting process ensures that the creation of new tokens is tied directly to the economic activity within the Jsonic ecosystem, promoting a stable and sustainable token supply.
 
 ### 4.2 DAO Valuation Method
@@ -438,7 +437,7 @@ $$(AM+1)y=pd-Ax^k\tag*{...(3.1)}$$
 
 A Gaussian Reduction algorithm can be used to solve 3.1 efficiently. We call the solution S. The solution S is coupled with the actual rank data, i.e. from the profiles where the rank values are known for sure and need not be predicted. The known data about a particular rank vector component can be represented in the form of a vector vk, having N components, one for each DAO.
 
-## 4.3 Method for evaluating Relevance Score
+### 4.3 Method for evaluating Relevance Score
 
 The following is a Graph Theoretic Method for evaluating relevance score of a given transaction with a given DAO by evaluating probability of the transaction to be performed by said DAO.
 
@@ -461,9 +460,9 @@ The said probability can be influenced by the following factors:
 
     Step 2.1. Prepare a list of DAOs who transacted on invoice $A$ and call it $L_A$.
 
-    Step 2.2. For each DAO $x{\varepsilon} L_A$, from the relationship network graph G, find the Shortest distance between $x$ and $X$, call it $d_x$.
+    Step 2.2. For each DAO $x{\varepsilon}L_A$, from the relationship network graph G, find the Shortest distance between $x$ and $X$, call it $d_x$.
 
-    Step 2.3. For each DAO $x{\varepsilon} L_A$, from the relationship network graph G, find the shortest path between $x$ and $X$, let its length be denoted by ${\lambda}$. Let $M$ denote the Adjacency-matrix of graph G.
+    Step 2.3. For each DAO $x{\varepsilon}L_A$, from the relationship network graph G, find the shortest path between $x$ and $X$, let its length be denoted by ${\lambda}$. Let $M$ denote the Adjacency-matrix of graph G.
     Compute $M_{\lambda}$ and let $n_{\lambda}$ denote its $(i,j)$<sup>th</sup> entry, where $x$ is the i<sup>th</sup> node and $X$ is the j<sup>th</sup> node in the Adjacency matrix M. Here $n$ denotes the number of paths of length ${\lambda}$.
 
 Similarly, find $n_{{\lambda}+1}$ and $n_{{\lambda}+2}$ from $M_{{\lambda}+1}$ and $M_{{\lambda}+2}$.
