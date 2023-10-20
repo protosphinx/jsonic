@@ -56,7 +56,7 @@
 
 _This paper presents an abstract of the Jsonic ecosystem, a blockchain platform designed to revolutionize business transactions in the Web3 era. It provides an overview of Jsonic's architecture, consensus mechanism, governance model, tokenomics, and incentives. The paper highlights the platform's interoperability with existing business systems, supported by its API and SDK. It also discusses ongoing research and development efforts, planned upgrades, and future features, such as e-invoicing, payment processing, project management, and more. Jsonic's long-term vision is to become the standard platform for businesses, with all transactions recorded on the blockchain and the Jsonic token reflecting the market cap of businesses. By fostering transparency, trust, and economic growth, Jsonic aims to redefine traditional GDP measurements and create a more inclusive global business landscape._
 
-**Authors**: Original copyright protected work of [@protosphinx](https://twitter.com/protosphinx), Somesh Mishra, Brajesh, TK TK 2023-05-17
+**Authors**: Original copyright protected work of [@protosphinx](https://twitter.com/protosphinx), TK 2023-05-17
 
 <h1>Table of Contents</h1>
 
