@@ -1,4 +1,4 @@
-Jsonic, your 🚀 for Enterprise Blockchain
+Jsonic, The Manufacturing and Inventory Blockchain
 =========================================
 
 
@@ -6,6 +6,3 @@ Jsonic, your 🚀 for Enterprise Blockchain
 [Substack](https://protosphinx.substack.com/)
 
 [Twitter](https://twitter.com/protosphinx)
-
-[Discord](https://discord.gg/EjPJNwNA)
-
