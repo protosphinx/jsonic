@@ -12,7 +12,7 @@
   <a href="#architecture">Architecture</a> &middot;
   <a href="#run-a-node">Run a Node</a> &middot;
   <a href="#technical-paper">Paper</a> &middot;
-  <a href="#community">Community</a>
+  <a href="#contributing">Contributing</a>
 </p>
 
 <p align="center">
@@ -169,12 +169,6 @@ The original ecosystem whitepaper is also available: **[whitepaper.md](whitepape
 ## Contributing
 
 We welcome contributions. See the [Contributing Guide](CONTRIBUTING.md).
-
-## Community
-
-- [Substack](https://protosphinx.substack.com/)
-- [Twitter](https://twitter.com/protosphinx)
-- [Discord](https://discord.gg/EjPJNwNA)
 
 ## Security
 
