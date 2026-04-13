@@ -296,3 +296,8 @@ testApp
 ### Vercel ###
 
 # End of https://www.toptal.com/developers/gitignore/api/nextjs,strapi,react,rust,docusaurus,gatsby,vercel,remix+netlify
+
+
+# Added by cargo
+
+/target
