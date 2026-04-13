@@ -5,13 +5,13 @@
   </picture>
 </p>
 
-<h3 align="center">A B2B Blockchain Protocol for Decentralized Autonomous Organizations</h3>
+<h3 align="center">Layer 1 Blockchain That Tokenizes Real-World Manufacturing</h3>
 
 <p align="center">
+  <a href="#how-it-works">How It Works</a> &middot;
   <a href="#architecture">Architecture</a> &middot;
-  <a href="#key-concepts">Key Concepts</a> &middot;
-  <a href="#whitepaper">Whitepaper</a> &middot;
-  <a href="#contributing">Contributing</a> &middot;
+  <a href="#run-a-node">Run a Node</a> &middot;
+  <a href="#technical-paper">Paper</a> &middot;
   <a href="#community">Community</a>
 </p>
 
@@ -23,67 +23,152 @@
 
 ---
 
-## About
+## What is Jsonic?
 
-Jsonic is a blockchain platform designed for business-to-business (B2B) transactions in the Web3 era. It introduces a novel **Proof of Transaction (POT)** consensus mechanism specifically built for enterprise use cases, enabling businesses to record, validate, and incentivize real-world transactions on-chain.
+Jsonic is a **Layer 1 blockchain** — like Ethereum or Solana — but instead of rewarding computation or capital, it rewards **real-world manufacturing and commerce**.
 
-The platform is built around **Decentralized Autonomous Organizations (DAOs)** — on-chain representations of real-world businesses — each with its own dedicated side-chain that functions as an individual balance sheet and ledger.
+Tokens are minted when manufacturers produce goods, sell them, and have those transactions verified on-chain by both parties. The more real business you do with reputable counterparties, the more you earn.
+
+**The core insight**: Jsonic uses **PageRank mathematics** (the same algorithm that powers Google Search) to build a recursive reputation system. Your reputation depends on who you trade with, and their reputation depends on who *they* trade with, all the way down. This makes it mathematically impossible to game the system with fake transactions.
+
+## How It Works
+
+```
+1. Manufacturer registers as a DAO (on-chain business identity)
+2. Manufacturer produces goods → logs inventory on their side-chain
+3. Sells to a buyer (another DAO or consumer) → both sign the transaction
+4. POT (Proof of Transaction) validates the deal on both side-chains
+5. At Solstice: main-chain collects all verified activity
+6. Tokens minted and distributed based on PageRank-weighted reputation
+```
+
+**Who gets rewarded and how much?**
+
+| What you do | Impact on reward |
+|---|---|
+| Sell to 1,000 unique buyers vs. 1 bulk buyer | 1,000 buyers = **much higher** reward (diversity) |
+| Your buyers have high reputation | **Higher** reward (PageRank propagation) |
+| You trade with established DAOs vs. unknown entities | Established = **higher** reward |
+| You create fake DAOs to buy from yourself | **Near-zero** reward (Sybil resistance) |
 
 ## Architecture
 
-Jsonic's architecture consists of three core layers:
+Jsonic is a **P2P network** — permissionless, anyone can run a node.
 
 ```
-┌─────────────────────────────────────────────┐
-│               Main-Chain                     │
-│  Global financial state, periodic Solstice   │
-│  snapshots, token minting & distribution     │
-├──────────┬──────────┬──────────┬────────────┤
-│ DAO-1    │ DAO-2    │ DAO-3    │  DAO-N     │
-│ Side-    │ Side-    │ Side-    │  Side-     │
-│ Chain    │ Chain    │ Chain    │  Chain     │
-│          │          │          │            │
-│ Ledger   │ Ledger   │ Ledger   │  Ledger   │
-│ Balance  │ Balance  │ Balance  │  Balance  │
-│ Sheet    │ Sheet    │ Sheet    │  Sheet    │
-└──────────┴──────────┴──────────┴────────────┘
-         Jsonic Virtual Machine (JVM)
+                    ┌───────────────────────┐
+                    │   Heartbeat Service    │  Central clock signal
+                    │   (network pulse)      │
+                    └──────────┬────────────┘
+                               │
+           ┌───────────────────┼───────────────────┐
+           │                   │                   │
+     ┌─────▼─────┐      ┌─────▼─────┐      ┌─────▼─────┐
+     │   Node A   │◄────►│   Node B   │◄────►│   Node C   │  P2P mesh
+     │  (Miner/   │      │  (Mfg DAO) │      │ (Consumer) │
+     │   Trader)  │      │            │      │            │
+     └─────┬─────┘      └─────┬─────┘      └───────────┘
+           │                   │
+    ┌──────┴──────┐     ┌──────┴──────┐
+    │ Main-Chain  │     │ Side-Chain  │   Per-DAO ledger
+    │ (global     │     │ (DAO B's    │   with inventory,
+    │  state)     │     │  balance    │   transactions,
+    │             │     │  sheet &    │   and balance sheet
+    │             │     │  inventory) │
+    └─────────────┘     └─────────────┘
 ```
 
-- **Main-chain** — Aggregates and reconciles balances from all DAO side-chains at each Solstice (periodic sync point). Provides a global snapshot of the ecosystem's financial state.
-- **Side-chains** — Each DAO maintains its own side-chain for transaction processing, balance sheet management, and ledger keeping. New blocks are generated when accumulated transaction value reaches a Materiality threshold.
-- **JVM (Jsonic Virtual Machine)** — Runtime environment on each node for executing smart contracts, processing data, and maintaining consensus.
+**Who runs a node?**
+
+- **Manufacturers** — to log production, track inventory, and earn tokens
+- **Traders/Retailers** — to transact with manufacturers and earn reputation
+- **Miners** — to validate transactions and earn a share of minted tokens
+- **Anyone** — permissionless; install the node and start participating
+
+### Protocol Stack
+
+| Layer | Component | Purpose |
+|-------|-----------|---------|
+| **Consensus** | Proof of Transaction (POT) | Validates B2B transactions via dual-DAO signature matching |
+| **Reputation** | PageRank Engine | Recursive trust propagation across the transaction graph |
+| **Ledger** | Side-chains (per-DAO) | Individual balance sheets, inventory tracking, block generation |
+| **State** | Main-chain | Global snapshot at Solstice, token minting, network metrics |
+| **Network** | Heartbeat | Central clock + P2P node discovery and liveness |
+| **Token** | Jsonic Token | Minted proportionally to verified production & sales |
 
 ## Key Concepts
 
 | Concept | Description |
 |---------|-------------|
-| **DAO** | On-chain equivalent of a real-world business entity |
-| **POT** | Proof of Transaction — validates that B2B transactions are well-formed and complete |
-| **Solstice** | Periodic sync point (analogous to end of financial year) when side-chain data is consolidated to the main-chain |
-| **Materiality** | Threshold that determines when a new block is added to a side-chain based on accumulated transaction value |
-| **Heartbeat** | Fixed interval at which each node confirms its liveness to the network |
-| **Adrenaline** | Dynamic adjustment of Heartbeat speed based on network transaction volume |
+| **DAO** | On-chain identity for a real-world business (manufacturer, retailer, etc.) |
+| **POT** | Proof of Transaction — validates that transactions are signed by both parties |
+| **PageRank** | Reputation algorithm — your score depends recursively on your trading partners' scores |
+| **Solstice** | Periodic sync (like end of financial year) when side-chains sync to main-chain and tokens are minted |
+| **Materiality** | Threshold for block creation — blocks appear when accumulated transaction value is significant |
+| **Heartbeat** | Network clock pulse from central service; nodes confirm liveness each tick |
+| **Adrenaline** | Dynamic scaling of Heartbeat frequency based on network load |
+| **Anxiety** | Health metric — ratio of invalid to total transactions (lower = healthier) |
 
-## Whitepaper
+## Run a Node
 
-The full technical whitepaper is available in this repository:
+**Requirements**: Rust 1.75+
 
-**[Read the Jsonic Whitepaper](whitepaper.md)**
+```bash
+# Clone the repository
+git clone https://github.com/protosphinx/jsonic.git
+cd jsonic
 
-It covers the complete protocol specification including blockchain architecture, consensus mechanism, tokenomics, DAO valuation methods, ecosystem integration, and the development roadmap.
+# Build the node
+cargo build --release
+
+# Run the demo (simulates full lifecycle: DAO registration → transactions → Solstice → token minting)
+cargo run
+
+# Run tests (52 tests covering crypto, POT, PageRank, side-chain, main-chain)
+cargo test
+```
+
+## Codebase
+
+```
+src/
+├── core/
+│   ├── types.rs        # DAO, Transaction, Block, BalanceSheet, NetworkMetrics
+│   ├── crypto.rs       # SHA-256, Ed25519 signing, Merkle trees
+│   ├── dao.rs          # DAO registration, invoice/payment creation
+│   ├── pot.rs          # Proof of Transaction validation engine
+│   ├── reputation.rs   # PageRank reputation graph + Sybil resistance
+│   ├── sidechain.rs    # Per-DAO ledger with Materiality block generation
+│   ├── mainchain.rs    # Solstice sync, token minting, network metrics
+│   └── heartbeat.rs    # Network node: heartbeat loop, POT matching
+├── lib.rs
+└── main.rs             # Demo: full DAO-to-DAO lifecycle
+```
+
+## Technical Paper
+
+The full mathematical specification is in **[paper.md](paper.md)**, covering:
+
+- PageRank reputation algorithm with weighted edges and convergence proofs
+- Token minting function and Solstice distribution
+- Sybil resistance analysis with formal bounds
+- Network dynamics (Anxiety, Adrenaline, Heartbeat)
+- Consumer integration via tokenized payment credentials
+
+The original ecosystem whitepaper is also available: **[whitepaper.md](whitepaper.md)**
 
 ## Roadmap
 
-- **eInvoicing & Payment Processing** — On-chain invoice generation, payment tracking, and settlement
-- **Project Management & Billing** — Decentralized project management with integrated billing
-- **Timesheets & Payroll** — On-chain workforce management and payroll processing
-- **Cross-chain Interoperability** — Communication with other blockchain networks
-- **Smart Contract Expansion** — Extended JVM capabilities for diverse business applications
+- **Inventory tracking** — On-chain production logging and supply chain visibility
+- **eInvoicing & Payment Processing** — Invoice generation, payment tracking, and settlement
+- **Consumer identity** — Tokenized credit card / UPI / wallet integration
+- **P2P networking** — Node discovery, gossip protocol, distributed Heartbeat
+- **Smart Contract Expansion** — Extended JVM for custom business logic
+- **Cross-chain Interoperability** — Bridges to Ethereum, Solana, and other L1s
 
 ## Contributing
 
-We welcome contributions to Jsonic. Please see our [Contributing Guide](CONTRIBUTING.md) for details on how to get involved.
+We welcome contributions. See the [Contributing Guide](CONTRIBUTING.md).
 
 ## Community
 
@@ -93,10 +178,10 @@ We welcome contributions to Jsonic. Please see our [Contributing Guide](CONTRIBU
 
 ## Security
 
-If you discover a security vulnerability, please review our [Security Policy](SECURITY.md) for responsible disclosure guidelines.
+See our [Security Policy](SECURITY.md) for responsible disclosure guidelines.
 
 ## License
 
-This work is licensed under the [Creative Commons Attribution-ShareAlike 4.0 International License](LICENSE).
+[Creative Commons Attribution-ShareAlike 4.0 International](LICENSE)
 
-Copyright 2023 [@protosphinx](https://github.com/protosphinx)
+Copyright 2023–2024 [@protosphinx](https://github.com/protosphinx)
