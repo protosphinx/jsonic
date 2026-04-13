@@ -10,7 +10,7 @@
 
 <p align="center">
  <strong>
-   A blockchain based system for validation and valuation of business transactions among Decentralized Autonomous Organizations.
+   A b2b protocol for Decentralized Autonomous Organizations.
  </strong>
 </p>
 
