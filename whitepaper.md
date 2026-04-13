@@ -2,7 +2,7 @@
   <a href="https://nextjs.org">
     <picture>
       <source media="(prefers-color-scheme: dark)" srcset="assets/brand/logo-jsconic-horizontal-reverse.png">
-      <img src="assets/brand/logo-jsconic-text-color.svg" height="45">
+      <img src="assets/brand/logo-jsconic-horizontal-color.svg" height="45">
     </picture>
     <h1 align="center">Jsonic Whitepaper</h1>
   </a>
