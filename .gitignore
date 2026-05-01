@@ -301,3 +301,11 @@ testApp
 # Added by cargo
 
 /target
+
+# Local activity log emitted by an external scheduler. Not for the
+# repo: appending to it produces commit-graph noise that dilutes the
+# actual project history.
+jsonic_activity.json
+
+# Local sled database written by jsonic-rpc.
+jsonic-data/

@@ -1,0 +1,71 @@
+# Jsonic status
+
+## Current state
+
+Reference implementation of the Jsonic Layer 1 protocol in Rust: ~3500 lines
+across 9 core modules + an HTTP API + 2 binaries. 61 tests passing in <0.2s.
+Persistent state via sled, JSON-RPC server over HTTP. Demo and RPC server
+ship as separate binaries (`jsonic-demo`, `jsonic-rpc`).
+
+## Recently shipped
+
+- **PageRank wired into Solstice token distribution.** `MainChain` now owns a
+  cumulative `ReputationGraph`. Each settled invoice adds a `buyer -> seller`
+  edge weighted by value. At every Solstice the chain runs PageRank and
+  overrides each snapshot's `relevance_score` with `compute_dao_reward`.
+- **Trust-floor reward formula.** `compute_dao_reward` uses
+  `trust(u) = max(0, PR(u) - baseline)` with `baseline = (1 - d) / N`. Drops
+  the count-based diversity multiplier that admitted a Sybil inflation hole.
+- **End-to-end Sybil test.** 100 fake DAOs claiming $10M of fabricated volume
+  lose to an honest cluster doing $900k of real volume.
+- **Whitepaper consolidated.** `paper.md` merged into `whitepaper.md`. Math
+  sections updated to the trust-floor formulation; stronger Sybil bound
+  proved (constant in k, not O(k/N)).
+- **Persistence layer.** `ChainStore` trait with `MemoryStore` and
+  `SledStore` impls. `MainChain` is now `Serialize/Deserialize`. Round-trip
+  tests including a sled-reopen survival test.
+- **JSON-RPC server.** `jsonic-rpc` binary serves an Axum router exposing
+  `/health`, `/daos`, `/transactions`, `/heartbeats`, `/blocks/:height`,
+  `/metrics`, `/balance/:dao_id`, `/reputation/:dao_id`. Restores main-chain
+  state from sled on startup, persists it on graceful shutdown. Integration
+  tests drive the full lifecycle through the HTTP surface.
+- **Repo hygiene.** `jsonic_activity.json` removed; `.gitignore` updated for
+  it and for the local sled directory. All em-dashes scrubbed from the docs.
+
+## Open issues
+
+- **Daily-update commit spam still in `git log`.** Scrub via `git filter-repo`
+  (destructive, force-push to main, breaks any forks). Pending the
+  history-cleanup pass.
+- **External activity-log generator still running somewhere.** The
+  cron / launchd / external service that produces `jsonic_activity.json`
+  lives outside this repo. Ignored by `.gitignore`, but needs to be turned
+  off at the source.
+
+## Next up (ranked)
+
+1. **P2P / libp2p layer.** RPC is in; gossip and node discovery are next.
+   Currently a single-node HTTP node, not yet a multi-node network.
+2. **Side-chain persistence.** Only `MainChain` is in the store today.
+   Side-chains regenerate from heartbeat replay; for production they should
+   round-trip too.
+3. **Adversarial test suite for POT.** Replay attacks, sequence-gap attacks,
+   double-spend, forged signatures, side-chain forks, partial-eclipse.
+4. **Property tests + fuzz targets.** `proptest` over PageRank invariants,
+   `cargo-fuzz` on transaction deserialization and signature verification.
+5. **Parametric tokenomics.** Move `BASE_MINT_PER_SOLSTICE`,
+   `SOLSTICE_INTERVAL`, `damping`, `materiality` into a `Genesis` /
+   `ChainParams` struct loaded from `genesis.toml`.
+6. **`.github/` scaffold.** CI (fmt, clippy -D warnings, test, audit),
+   dependabot, PR template, issue templates, CODEOWNERS.
+7. **Reputation graph pruning.** Cumulative graph grows without bound.
+   Sliding window or eigenvector incremental update.
+8. **Embedded `mod hex` cleanup.** Pull in the `hex` crate instead of the
+   in-tree stub in `crypto.rs`.
+
+## Reference
+
+- Whitepaper: [`whitepaper.md`](whitepaper.md) (consolidated, v0.3).
+- Demo: `cargo run --bin jsonic-demo`.
+- RPC server: `cargo run --bin jsonic-rpc`.
+- Tests: `cargo test`.

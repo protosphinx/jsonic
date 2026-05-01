@@ -25,7 +25,7 @@
 
 ## What is Jsonic?
 
-Jsonic is a **Layer 1 blockchain** — like Ethereum or Solana — but instead of rewarding computation or capital, it rewards **real-world manufacturing and commerce**.
+Jsonic is a **Layer 1 blockchain** (like Ethereum or Solana), but instead of rewarding computation or capital, it rewards **real-world manufacturing and commerce**.
 
 Tokens are minted when manufacturers produce goods, sell them, and have those transactions verified on-chain by both parties. The more real business you do with reputable counterparties, the more you earn.
 
@@ -53,7 +53,7 @@ Tokens are minted when manufacturers produce goods, sell them, and have those tr
 
 ## Architecture
 
-Jsonic is a **P2P network** — permissionless, anyone can run a node.
+Jsonic is a **P2P network**: permissionless, anyone can run a node.
 
 ```
                     ┌───────────────────────┐
@@ -80,10 +80,10 @@ Jsonic is a **P2P network** — permissionless, anyone can run a node.
 
 **Who runs a node?**
 
-- **Manufacturers** — to log production, track inventory, and earn tokens
-- **Traders/Retailers** — to transact with manufacturers and earn reputation
-- **Miners** — to validate transactions and earn a share of minted tokens
-- **Anyone** — permissionless; install the node and start participating
+- **Manufacturers**: to log production, track inventory, and earn tokens
+- **Traders/Retailers**: to transact with manufacturers and earn reputation
+- **Miners**: to validate transactions and earn a share of minted tokens
+- **Anyone**: permissionless; install the node and start participating
 
 ### Protocol Stack
 
@@ -101,13 +101,13 @@ Jsonic is a **P2P network** — permissionless, anyone can run a node.
 | Concept | Description |
 |---------|-------------|
 | **DAO** | On-chain identity for a real-world business (manufacturer, retailer, etc.) |
-| **POT** | Proof of Transaction — validates that transactions are signed by both parties |
-| **PageRank** | Reputation algorithm — your score depends recursively on your trading partners' scores |
+| **POT** | Proof of Transaction: validates that transactions are signed by both parties |
+| **PageRank** | Reputation algorithm: your score depends recursively on your trading partners' scores |
 | **Solstice** | Periodic sync (like end of financial year) when side-chains sync to main-chain and tokens are minted |
-| **Materiality** | Threshold for block creation — blocks appear when accumulated transaction value is significant |
+| **Materiality** | Threshold for block creation: blocks appear when accumulated transaction value is significant |
 | **Heartbeat** | Network clock pulse from central service; nodes confirm liveness each tick |
 | **Adrenaline** | Dynamic scaling of Heartbeat frequency based on network load |
-| **Anxiety** | Health metric — ratio of invalid to total transactions (lower = healthier) |
+| **Anxiety** | Health metric: ratio of invalid to total transactions (lower = healthier) |
 
 ## Run a Node
 
@@ -118,15 +118,37 @@ Jsonic is a **P2P network** — permissionless, anyone can run a node.
 git clone https://github.com/protosphinx/jsonic.git
 cd jsonic
 
-# Build the node
+# Build everything
 cargo build --release
 
-# Run the demo (simulates full lifecycle: DAO registration → transactions → Solstice → token minting)
-cargo run
+# Run the in-process demo (DAO registration -> transactions -> Solstice -> minting)
+cargo run --bin jsonic-demo
 
-# Run tests (52 tests covering crypto, POT, PageRank, side-chain, main-chain)
+# Run the JSON-RPC server (persists state to ./jsonic-data via sled)
+cargo run --bin jsonic-rpc
+# then: curl http://127.0.0.1:8080/health
+
+# Run tests (61 tests: crypto, POT, PageRank, side-chain, main-chain,
+# end-to-end Sybil resistance, persistence round-trips, RPC integration)
 cargo test
 ```
+
+### JSON-RPC surface
+
+| Method | Path | Purpose |
+|--------|------|---------|
+| GET    | `/health` | Liveness probe (height, pending, tick) |
+| POST   | `/daos` | Register a DAO (body: DAO JSON) |
+| POST   | `/transactions` | Submit a signed Transaction |
+| POST   | `/heartbeats` | Tick the heartbeat N times (body: `{ticks: u64}`) |
+| GET    | `/blocks/:height` | Fetch a main-chain block |
+| GET    | `/metrics` | Network metrics from the latest block |
+| GET    | `/balance/:dao_id` | Token balance + side-chain balance sheet |
+| GET    | `/reputation/:dao_id` | PageRank score, baseline, and trust |
+
+State is persisted to a sled database (configurable via `JSONIC_RPC_DATA_DIR`).
+On clean shutdown the latest main-chain snapshot is written back, so a node
+restart resumes from the same height with the same reputation history.
 
 ## Codebase
 
@@ -140,31 +162,36 @@ src/
 │   ├── reputation.rs   # PageRank reputation graph + Sybil resistance
 │   ├── sidechain.rs    # Per-DAO ledger with Materiality block generation
 │   ├── mainchain.rs    # Solstice sync, token minting, network metrics
+│   ├── store.rs        # ChainStore trait + MemoryStore + SledStore
 │   └── heartbeat.rs    # Network node: heartbeat loop, POT matching
+├── api.rs              # Axum-based JSON-RPC handlers + router
+├── bin/
+│   └── rpc.rs          # jsonic-rpc binary: HTTP server with sled persistence
 ├── lib.rs
-└── main.rs             # Demo: full DAO-to-DAO lifecycle
+└── main.rs             # jsonic-demo binary: full in-process lifecycle
 ```
 
 ## Technical Paper
 
-The full mathematical specification is in **[paper.md](paper.md)**, covering:
+The consolidated whitepaper at **[whitepaper.md](whitepaper.md)** covers both the
+ecosystem narrative and the formal mathematical specification:
 
+- Architecture (DAOs, side-chains, main-chain, JVM, POT)
 - PageRank reputation algorithm with weighted edges and convergence proofs
-- Token minting function and Solstice distribution
+- Trust-floor token minting function and Solstice distribution
 - Sybil resistance analysis with formal bounds
-- Network dynamics (Anxiety, Adrenaline, Heartbeat)
+- Network dynamics (Anxiety, Adrenaline, Heartbeat, Materiality)
 - Consumer integration via tokenized payment credentials
-
-The original ecosystem whitepaper is also available: **[whitepaper.md](whitepaper.md)**
+- Properties and guarantees, integration roadmap, long-term vision
 
 ## Roadmap
 
-- **Inventory tracking** — On-chain production logging and supply chain visibility
-- **eInvoicing & Payment Processing** — Invoice generation, payment tracking, and settlement
-- **Consumer identity** — Tokenized credit card / UPI / wallet integration
-- **P2P networking** — Node discovery, gossip protocol, distributed Heartbeat
-- **Smart Contract Expansion** — Extended JVM for custom business logic
-- **Cross-chain Interoperability** — Bridges to Ethereum, Solana, and other L1s
+- **Inventory tracking**: On-chain production logging and supply chain visibility
+- **eInvoicing & Payment Processing**: Invoice generation, payment tracking, and settlement
+- **Consumer identity**: Tokenized credit card / UPI / wallet integration
+- **P2P networking**: Node discovery, gossip protocol, distributed Heartbeat
+- **Smart Contract Expansion**: Extended JVM for custom business logic
+- **Cross-chain Interoperability**: Bridges to Ethereum, Solana, and other L1s
 
 ## Contributing
 

@@ -137,11 +137,20 @@ impl JsonicNode {
             }
         }
 
-        // Process settlements — update transaction statuses on side-chains
+        // Process settlements - update transaction statuses on side-chains
         for (inv_idx, pay_idx) in &settlements {
             let invoice_id = self.pending_matching[*inv_idx].id.clone();
             let invoice_from = self.pending_matching[*inv_idx].from.clone();
             let payment_from = self.pending_matching[*pay_idx].from.clone();
+            let settled_value = self.pending_matching[*inv_idx].amount;
+
+            // Buyer (payment_from) -> Seller (invoice_from): edge in the
+            // reputation graph, weighted by the settled value.
+            self.main_chain.record_settled_transaction(
+                &payment_from,
+                &invoice_from,
+                settled_value,
+            );
 
             // Update invoice status to Settled on the issuer's side-chain
             if let Some(chain) = self.side_chains.get_mut(&invoice_from) {
@@ -310,6 +319,100 @@ mod tests {
         let result = node.heartbeat();
         assert!(result.is_none());
         assert_eq!(node.tick, 1);
+    }
+
+    #[test]
+    fn test_sybil_ring_earns_less_than_honest_cluster() {
+        // End-to-end proof of PageRank-based Sybil resistance through the full
+        // Solstice pipeline.
+        //
+        // Sybil here cheats hard: 100 fake DAOs each "pay" Sybil $100,000,
+        // for $10M of claimed volume. The honest cluster (A, B, C) does
+        // 30 mutual trades at $10,000, for $900,000 of real volume - 11x
+        // less raw volume than Sybil. The trust-floor reward formula
+        // (`compute_dao_reward`) still ranks the honest cluster's worst
+        // earner above Sybil because every fake's PageRank converges to the
+        // random-walk baseline, so the fakes contribute zero trust.
+
+        let mut node = JsonicNode::new();
+        node.solstice_interval = 10_000;
+
+        let mut a = RegisteredDAO::register("A", "Honest");
+        let mut b = RegisteredDAO::register("B", "Honest");
+        let mut c = RegisteredDAO::register("C", "Honest");
+        let mut sybil = RegisteredDAO::register("Sybil", "Attacker");
+
+        let a_id = a.id().clone();
+        let b_id = b.id().clone();
+        let c_id = c.id().clone();
+        let sybil_id = sybil.id().clone();
+
+        node.register_dao(a.dao.clone());
+        node.register_dao(b.dao.clone());
+        node.register_dao(c.dao.clone());
+        node.register_dao(sybil.dao.clone());
+
+        // Honest mutual trade: 30 cycles of A->B, B->C, C->A at $10k each.
+        for _ in 0..30 {
+            let inv = a.create_invoice(&b_id, 10_000.0, "USD", "h");
+            let pay = b.create_payment(&a_id, 10_000.0, "USD", &inv.id, "h");
+            node.submit_transaction(inv);
+            node.submit_transaction(pay);
+
+            let inv = b.create_invoice(&c_id, 10_000.0, "USD", "h");
+            let pay = c.create_payment(&b_id, 10_000.0, "USD", &inv.id, "h");
+            node.submit_transaction(inv);
+            node.submit_transaction(pay);
+
+            let inv = c.create_invoice(&a_id, 10_000.0, "USD", "h");
+            let pay = a.create_payment(&c_id, 10_000.0, "USD", &inv.id, "h");
+            node.submit_transaction(inv);
+            node.submit_transaction(pay);
+        }
+
+        // Sybil ring: 100 fakes, each settles one $100,000 invoice from
+        // Sybil. Sybil's claimed volume ($10M) is ~11x the honest cluster's
+        // real volume ($900k).
+        let mut fakes: Vec<RegisteredDAO> = (0..100)
+            .map(|i| RegisteredDAO::register(&format!("fake_{}", i), "Sybil"))
+            .collect();
+        for fake in &fakes {
+            node.register_dao(fake.dao.clone());
+        }
+        for fake in fakes.iter_mut() {
+            let fake_id = fake.id().clone();
+            let inv = sybil.create_invoice(&fake_id, 100_000.0, "USD", "s");
+            let pay = fake.create_payment(&sybil_id, 100_000.0, "USD", &inv.id, "s");
+            node.submit_transaction(inv);
+            node.submit_transaction(pay);
+        }
+
+        // Drain pending matches across many heartbeats, then force a Solstice.
+        for _ in 0..200 {
+            node.heartbeat();
+        }
+        node.solstice_interval = node.tick + 1;
+        let dist = node
+            .heartbeat()
+            .expect("Solstice should fire on the configured tick");
+
+        let by_id = |id: &DAOId| {
+            dist.iter()
+                .find(|d| &d.dao_id == id)
+                .map(|d| d.tokens_awarded)
+                .unwrap_or(0.0)
+        };
+
+        let honest_min = by_id(&a_id).min(by_id(&b_id)).min(by_id(&c_id));
+        let sybil_reward = by_id(&sybil_id);
+
+        assert!(
+            honest_min > sybil_reward,
+            "Honest worst earner ({}) should beat Sybil ({}) despite Sybil \
+             claiming 11x the volume",
+            honest_min,
+            sybil_reward,
+        );
     }
 
     #[test]

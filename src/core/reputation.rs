@@ -34,10 +34,11 @@
 //!   so creating fake DAOs to self-transact yields near-zero reputation since
 //!   those fake DAOs have no inbound reputation themselves.
 
+use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};
 
-/// A node in the transaction graph — either a DAO or a verified consumer.
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+/// A node in the transaction graph: either a DAO or a verified consumer.
+#[derive(Debug, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum NodeId {
     DAO(String),
     /// Consumer identified by a tokenized payment credential
@@ -55,7 +56,7 @@ impl std::fmt::Display for NodeId {
 }
 
 /// A directed, weighted edge in the transaction graph.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TransactionEdge {
     pub from: NodeId,
     pub to: NodeId,
@@ -77,12 +78,13 @@ impl TransactionEdge {
 }
 
 /// The transaction graph on which PageRank is computed.
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ReputationGraph {
     /// All nodes in the graph.
     nodes: HashSet<NodeId>,
-    /// Adjacency list: from → [(to, edge)].
+    /// Adjacency list: from -> [(to, edge)].
     outbound: HashMap<NodeId, Vec<TransactionEdge>>,
-    /// Reverse adjacency: to → [(from, edge)].
+    /// Reverse adjacency: to -> [(from, edge)].
     inbound: HashMap<NodeId, Vec<TransactionEdge>>,
 }
 
@@ -209,12 +211,18 @@ impl Default for PageRankConfig {
 pub struct ReputationScores {
     /// Raw PageRank scores per node.
     pub pagerank: HashMap<NodeId, f64>,
-    /// Diversity factor per node (0.0 – 1.0).
+    /// Diversity factor per node (0.0 - 1.0). Count-based; kept for
+    /// inspection and the composite score. Not used by `compute_dao_reward`,
+    /// which uses a reputation-weighted notion of diversity instead.
     pub diversity: HashMap<NodeId, f64>,
-    /// Final composite score: pagerank * diversity_boost.
+    /// Final composite score: pagerank * (1 + diversity).
     pub composite: HashMap<NodeId, f64>,
     /// Number of iterations until convergence.
     pub iterations: u32,
+    /// The random-walk floor `(1 - d) / N`. Every node's PageRank is at
+    /// least this value. Used by `compute_dao_reward` to filter out the
+    /// signal that a node has only because it exists.
+    pub baseline_rank: f64,
 }
 
 /// Compute PageRank on the transaction graph.
@@ -243,11 +251,13 @@ pub fn compute_pagerank(
             diversity: HashMap::new(),
             composite: HashMap::new(),
             iterations: 0,
+            baseline_rank: 0.0,
         };
     }
 
     let n_f64 = n as f64;
     let d = config.damping;
+    let baseline_rank = (1.0 - d) / n_f64;
 
     // Initialize: uniform distribution
     let initial_rank = 1.0 / n_f64;
@@ -349,42 +359,57 @@ pub fn compute_pagerank(
         diversity,
         composite,
         iterations,
+        baseline_rank,
     }
 }
 
-/// Compute the token reward for a DAO based on its reputation and sales.
+/// Compute the token reward for a DAO based on its reputation-weighted sales.
 ///
 /// ```text
-/// reward(DAO) = Σ_sale [ sale_value * buyer_pagerank * diversity(DAO) ]
+/// trust(buyer) = max(0, PR(buyer) - baseline_rank)
+/// reward(DAO)  = Σ_sale [ ln(1 + sale_value) * tx_count * trust(buyer) ]
 /// ```
 ///
-/// This means:
-/// - Selling to high-reputation buyers yields more tokens
-/// - Having diverse buyers yields more tokens
-/// - Higher sale values yield more tokens (log-dampened)
+/// The `baseline_rank` is `(1 - d) / N`: the PageRank a node has purely from
+/// existing in the graph. Subtracting it before weighting filters out the
+/// "everyone-gets-some-rank" signal so that nodes which have not earned trust
+/// from other earned-trust nodes contribute nothing to a seller's reward.
+///
+/// Why no diversity multiplier? An earlier formulation multiplied by
+/// `(1 + unique_counterparty_count / max_count)`. That made a DAO with N fake
+/// unique buyers earn a 2x multiplier even though those buyers were
+/// reputation-less, which let a Sybil ring beat an honest cluster as long as
+/// the ring had enough fake unique nodes. The trust-floor formulation captures
+/// real diversity automatically: each unique high-trust buyer contributes
+/// independently, while fake buyers (whose PR sits at baseline) contribute
+/// zero regardless of count.
+///
+/// Properties:
+/// - Selling to high-reputation buyers yields more tokens (linear in trust).
+/// - Selling to many independently-trusted buyers yields more tokens (each
+///   contributes its own trust to the sum).
+/// - Higher sale values yield more tokens, log-dampened so a single huge
+///   transaction cannot dominate.
+/// - A Sybil ring of N fake buyers contributes ~0 because every fake's PR
+///   converges to the random-walk baseline.
 pub fn compute_dao_reward(
     dao: &NodeId,
     graph: &ReputationGraph,
     scores: &ReputationScores,
 ) -> f64 {
-    let diversity = scores.diversity.get(dao).copied().unwrap_or(0.0);
-
-    // Sum over all inbound edges (purchases from this DAO)
     let inbound_edges = match graph.inbound.get(dao) {
         Some(edges) => edges,
         None => return 0.0,
     };
 
+    let baseline = scores.baseline_rank;
     let mut reward = 0.0;
     for edge in inbound_edges {
         let buyer_rank = scores.pagerank.get(&edge.from).copied().unwrap_or(0.0);
-        // Log-dampened value × buyer reputation × diversity
-        let edge_reward = (1.0 + edge.tx_value).ln() * edge.tx_count as f64 * buyer_rank;
-        reward += edge_reward;
+        let trust = (buyer_rank - baseline).max(0.0);
+        reward += (1.0 + edge.tx_value).ln() * edge.tx_count as f64 * trust;
     }
-
-    // Apply diversity multiplier: more diverse customer base = higher reward
-    reward * (1.0 + diversity)
+    reward
 }
 
 #[cfg(test)]

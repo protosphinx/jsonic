@@ -10,11 +10,15 @@
 //! 5. Creates a new main-chain block
 
 use chrono::Utc;
+use serde::{Deserialize, Serialize};
 
 use super::crypto::{merkle_root, sha256_str};
 use super::pot;
+use super::reputation::{
+    compute_dao_reward, compute_pagerank, NodeId, PageRankConfig, ReputationGraph,
+};
 use super::types::{
-    BlockHeader, DAOSnapshot, Hash, MainChainBlock, NetworkMetrics, TokenDistribution,
+    BlockHeader, DAOId, DAOSnapshot, Hash, MainChainBlock, NetworkMetrics, TokenDistribution,
 };
 
 /// Base tokens minted per Solstice epoch, distributed among DAOs.
@@ -26,15 +30,19 @@ const BASE_HEARTBEAT_MS: u64 = 60_000; // 1 minute
 /// Target transactions per heartbeat for Adrenaline calculation.
 const TARGET_TX_PER_HEARTBEAT: u64 = 100;
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MainChain {
     pub blocks: Vec<MainChainBlock>,
     pub total_token_supply: f64,
+    /// Cumulative DAO-to-DAO transaction graph used for PageRank reputation.
+    /// Edges are added when invoices settle (buyer to seller, weighted by value).
+    pub reputation_graph: ReputationGraph,
     /// Running count of total transactions across all heartbeats.
-    total_transactions: u64,
+    pub(crate) total_transactions: u64,
     /// Running count of invalid transactions for Anxiety.
-    invalid_transactions: u64,
+    pub(crate) invalid_transactions: u64,
     /// Transactions observed in the current heartbeat window.
-    current_heartbeat_tx_count: u64,
+    pub(crate) current_heartbeat_tx_count: u64,
 }
 
 impl MainChain {
@@ -42,6 +50,7 @@ impl MainChain {
         MainChain {
             blocks: Vec::new(),
             total_token_supply: 0.0,
+            reputation_graph: ReputationGraph::new(),
             total_transactions: 0,
             invalid_transactions: 0,
             current_heartbeat_tx_count: 0,
@@ -57,10 +66,39 @@ impl MainChain {
         }
     }
 
+    /// Record a settled invoice as an edge in the reputation graph.
+    /// `buyer` paid `seller` `value` units. PageRank propagates trust along
+    /// these edges, so a sale to a high-reputation buyer carries more weight.
+    pub fn record_settled_transaction(&mut self, buyer: &DAOId, seller: &DAOId, value: f64) {
+        self.reputation_graph.add_transaction(
+            NodeId::DAO(buyer.clone()),
+            NodeId::DAO(seller.clone()),
+            1,
+            value,
+        );
+    }
+
     /// Perform a Solstice: collect snapshots, mint tokens, create a block.
     ///
     /// Returns the list of token distributions so callers can credit DAOs.
-    pub fn solstice(&mut self, snapshots: Vec<DAOSnapshot>) -> Vec<TokenDistribution> {
+    ///
+    /// Relevance scores in the incoming snapshots are overridden with a
+    /// PageRank-weighted reward computed against the cumulative reputation
+    /// graph. A DAO whose only buyers are Sybil nodes thus receives near-zero
+    /// reward regardless of raw transaction count.
+    pub fn solstice(&mut self, mut snapshots: Vec<DAOSnapshot>) -> Vec<TokenDistribution> {
+        let pr_scores = compute_pagerank(&self.reputation_graph, &PageRankConfig::default());
+        for snap in &mut snapshots {
+            let node = NodeId::DAO(snap.dao_id.clone());
+            let reward = compute_dao_reward(&node, &self.reputation_graph, &pr_scores);
+            // Fall back to the simple count*ln(value) metric only when the
+            // reputation graph has no inbound edges for this DAO yet (e.g.
+            // first Solstice before any invoices have settled).
+            if reward > 0.0 {
+                snap.relevance_score = reward;
+            }
+        }
+
         let distributions = self.compute_token_distribution(&snapshots);
 
         // Update total supply
@@ -128,7 +166,7 @@ impl MainChain {
                     dao_id: s.dao_id.clone(),
                     tokens_awarded: tokens,
                     reason: format!(
-                        "Relevance {:.4} ({} matched txs worth {:.2}), share {:.2}%",
+                        "Reputation-weighted relevance {:.4} (period: {} matched txs worth {:.2}), share {:.2}%",
                         s.relevance_score,
                         s.matched_tx_count,
                         s.matched_tx_value,

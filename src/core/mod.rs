@@ -5,4 +5,5 @@ pub mod mainchain;
 pub mod pot;
 pub mod reputation;
 pub mod sidechain;
+pub mod store;
 pub mod types;
