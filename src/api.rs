@@ -20,19 +20,19 @@
 use std::sync::Arc;
 
 use axum::{
+    Router,
     extract::{Path, State},
     http::StatusCode,
     response::{IntoResponse, Json},
     routing::{get, post},
-    Router,
 };
 use serde::{Deserialize, Serialize};
 use tokio::sync::RwLock;
 
 use crate::core::dao::DAORegistry;
 use crate::core::heartbeat::JsonicNode;
-use crate::core::reputation::{compute_pagerank, NodeId, PageRankConfig};
-use crate::core::types::{BalanceSheet, DAOId, MainChainBlock, NetworkMetrics, Transaction, DAO};
+use crate::core::reputation::{NodeId, PageRankConfig, compute_pagerank};
+use crate::core::types::{BalanceSheet, DAO, DAOId, MainChainBlock, NetworkMetrics, Transaction};
 
 /// Shared, thread-safe handle to a Jsonic node.
 pub type SharedNode = Arc<RwLock<JsonicNode>>;
@@ -115,14 +115,14 @@ async fn health(State(node): State<SharedNode>) -> Json<HealthResponse> {
     })
 }
 
-async fn register_dao(
-    State(node): State<SharedNode>,
-    Json(dao): Json<DAO>,
-) -> impl IntoResponse {
+async fn register_dao(State(node): State<SharedNode>, Json(dao): Json<DAO>) -> impl IntoResponse {
     let id = dao.id.clone();
     let mut guard = node.write().await;
     guard.register_dao(dao);
-    (StatusCode::CREATED, Json(RegisterDaoResponse { dao_id: id }))
+    (
+        StatusCode::CREATED,
+        Json(RegisterDaoResponse { dao_id: id }),
+    )
 }
 
 async fn submit_transaction(
@@ -187,8 +187,7 @@ async fn get_metrics(
         None => Err((
             StatusCode::NOT_FOUND,
             Json(ErrorResponse {
-                error: "no main-chain blocks yet; run a heartbeat past a Solstice"
-                    .to_string(),
+                error: "no main-chain blocks yet; run a heartbeat past a Solstice".to_string(),
             }),
         )),
     }
@@ -228,7 +227,10 @@ async fn get_reputation(
     Path(dao_id): Path<DAOId>,
 ) -> Json<ReputationResponse> {
     let guard = node.read().await;
-    let scores = compute_pagerank(&guard.main_chain.reputation_graph, &PageRankConfig::default());
+    let scores = compute_pagerank(
+        &guard.main_chain.reputation_graph,
+        &PageRankConfig::default(),
+    );
     let key = NodeId::DAO(dao_id.clone());
     let pr = scores.pagerank.get(&key).copied().unwrap_or(0.0);
     let trust = (pr - scores.baseline_rank).max(0.0);
@@ -252,9 +254,9 @@ fn registered(registry: &DAORegistry, dao_id: &DAOId) -> bool {
 mod tests {
     use super::*;
     use crate::core::dao::RegisteredDAO;
-    use axum::body::{to_bytes, Body};
+    use axum::body::{Body, to_bytes};
     use axum::http::{Request, StatusCode};
-    use serde_json::{json, Value};
+    use serde_json::{Value, json};
     use tower::ServiceExt;
 
     fn fresh_node() -> SharedNode {
@@ -264,7 +266,9 @@ mod tests {
     }
 
     async fn body_json(resp: axum::response::Response) -> Value {
-        let bytes = to_bytes(resp.into_body(), usize::MAX).await.expect("read body");
+        let bytes = to_bytes(resp.into_body(), usize::MAX)
+            .await
+            .expect("read body");
         serde_json::from_slice(&bytes).expect("parse json")
     }
 
@@ -273,7 +277,12 @@ mod tests {
         let node = fresh_node();
         let app = build_router(node);
         let resp = app
-            .oneshot(Request::builder().uri("/health").body(Body::empty()).unwrap())
+            .oneshot(
+                Request::builder()
+                    .uri("/health")
+                    .body(Body::empty())
+                    .unwrap(),
+            )
             .await
             .unwrap();
         assert_eq!(resp.status(), StatusCode::OK);

@@ -55,10 +55,7 @@ pub fn verify_sequence(tx: &Transaction, expected_next: u64) -> bool {
 /// For an invoice from DAO-A to DAO-B to be "matched", DAO-B must have a
 /// corresponding acknowledgment. In practice this means both DAOs recorded
 /// the same transaction (same ID, same amount, matching from/to).
-pub fn match_transactions(
-    sender_tx: &Transaction,
-    receiver_tx: &Transaction,
-) -> POTVerdict {
+pub fn match_transactions(sender_tx: &Transaction, receiver_tx: &Transaction) -> POTVerdict {
     // Must reference the same transaction ID
     if sender_tx.id != receiver_tx.id {
         return POTVerdict::Invalid("Transaction IDs do not match".to_string());
@@ -96,10 +93,7 @@ pub fn match_transactions(
 /// - The payment amount matches the invoice amount
 /// - The payment is from the invoice's `to` DAO (the debtor pays)
 /// - The payment is to the invoice's `from` DAO (the creditor receives)
-pub fn settle_invoice(
-    invoice: &Transaction,
-    payment: &Transaction,
-) -> POTVerdict {
+pub fn settle_invoice(invoice: &Transaction, payment: &Transaction) -> POTVerdict {
     if invoice.tx_type != TransactionType::Invoice {
         return POTVerdict::Invalid("First transaction is not an Invoice".to_string());
     }
@@ -117,24 +111,18 @@ pub fn settle_invoice(
             ));
         }
         None => {
-            return POTVerdict::Invalid(
-                "Payment does not reference any invoice".to_string(),
-            );
+            return POTVerdict::Invalid("Payment does not reference any invoice".to_string());
         }
     }
 
     // The payer (payment.from) should be the invoice's recipient (invoice.to)
     if payment.from != invoice.to {
-        return POTVerdict::Invalid(
-            "Payment sender does not match invoice recipient".to_string(),
-        );
+        return POTVerdict::Invalid("Payment sender does not match invoice recipient".to_string());
     }
 
     // The payee (payment.to) should be the invoice issuer (invoice.from)
     if payment.to != invoice.from {
-        return POTVerdict::Invalid(
-            "Payment recipient does not match invoice issuer".to_string(),
-        );
+        return POTVerdict::Invalid("Payment recipient does not match invoice issuer".to_string());
     }
 
     // Amounts must match
@@ -206,7 +194,7 @@ mod tests {
     #[test]
     fn test_match_transactions_success() {
         let mut dao_a = RegisteredDAO::register("DAO-A", "Tech");
-        let mut dao_b = RegisteredDAO::register("DAO-B", "Finance");
+        let dao_b = RegisteredDAO::register("DAO-B", "Finance");
 
         let invoice = dao_a.create_invoice(dao_b.id(), 5000.0, "USD", "Services");
 
@@ -215,8 +203,13 @@ mod tests {
         ack.signature = crate::core::crypto::sign(
             format!(
                 "{}:{}:{}:{}:{}:{}:{}",
-                ack.id, ack.from, ack.to, ack.amount, ack.currency,
-                ack.sequence_number, ack.timestamp.to_rfc3339()
+                ack.id,
+                ack.from,
+                ack.to,
+                ack.amount,
+                ack.currency,
+                ack.sequence_number,
+                ack.timestamp.to_rfc3339()
             )
             .as_bytes(),
             &dao_b.keypair.signing_key,
@@ -265,13 +258,7 @@ mod tests {
 
         let invoice = dao_a.create_invoice(dao_b.id(), 10_000.0, "EUR", "Services");
         // DAO-C tries to pay an invoice meant for DAO-B
-        let payment = dao_c.create_payment(
-            dao_a.id(),
-            10_000.0,
-            "EUR",
-            &invoice.id,
-            "Wrong payer",
-        );
+        let payment = dao_c.create_payment(dao_a.id(), 10_000.0, "EUR", &invoice.id, "Wrong payer");
 
         let verdict = settle_invoice(&invoice, &payment);
         assert!(matches!(verdict, POTVerdict::Invalid(_)));

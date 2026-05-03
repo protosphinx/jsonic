@@ -144,10 +144,7 @@ impl SideChain {
     }
 
     /// Apply a set of transactions to a balance sheet, producing updated balances.
-    fn apply_transactions(
-        opening: &BalanceSheet,
-        transactions: &[Transaction],
-    ) -> BalanceSheet {
+    fn apply_transactions(opening: &BalanceSheet, transactions: &[Transaction]) -> BalanceSheet {
         let mut balance = opening.clone();
 
         for tx in transactions {

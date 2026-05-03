@@ -15,7 +15,7 @@ use super::dao::DAORegistry;
 use super::mainchain::MainChain;
 use super::pot;
 use super::sidechain::SideChain;
-use super::types::{DAOId, Transaction, TransactionStatus, TokenDistribution};
+use super::types::{DAOId, TokenDistribution, Transaction, TransactionStatus};
 
 use std::collections::HashMap;
 
@@ -80,7 +80,7 @@ impl JsonicNode {
         self.process_matching();
 
         // Check if it's time for Solstice
-        if self.tick % self.solstice_interval == 0 {
+        if self.tick.is_multiple_of(self.solstice_interval) {
             Some(self.execute_solstice())
         } else {
             None
@@ -110,9 +110,7 @@ impl JsonicNode {
                             (tx_j, tx_i, j, i)
                         };
 
-                    if let pot::POTVerdict::Settled =
-                        pot::settle_invoice(invoice, payment)
-                    {
+                    if let pot::POTVerdict::Settled = pot::settle_invoice(invoice, payment) {
                         settlements.push((inv_idx, pay_idx));
                         self.main_chain.record_transaction_outcome(true);
                         continue;
@@ -146,11 +144,8 @@ impl JsonicNode {
 
             // Buyer (payment_from) -> Seller (invoice_from): edge in the
             // reputation graph, weighted by the settled value.
-            self.main_chain.record_settled_transaction(
-                &payment_from,
-                &invoice_from,
-                settled_value,
-            );
+            self.main_chain
+                .record_settled_transaction(&payment_from, &invoice_from, settled_value);
 
             // Update invoice status to Settled on the issuer's side-chain
             if let Some(chain) = self.side_chains.get_mut(&invoice_from) {
