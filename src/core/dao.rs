@@ -6,10 +6,8 @@
 
 use chrono::Utc;
 
-use super::crypto::{derive_dao_id, generate_keypair, sign, KeyPair};
-use super::types::{
-    Transaction, TransactionStatus, TransactionType, DAOId, DAO, DAOProfile,
-};
+use super::crypto::{KeyPair, derive_dao_id, generate_keypair, sign};
+use super::types::{DAO, DAOId, DAOProfile, Transaction, TransactionStatus, TransactionType};
 
 /// A registered DAO with its private signing key.
 /// The signing key never leaves the DAO's node in a real deployment.
@@ -228,12 +226,8 @@ mod tests {
         let mut sender = RegisteredDAO::register("Acme Corp", "Technology");
         let receiver = RegisteredDAO::register("Globex Inc", "Manufacturing");
 
-        let invoice = sender.create_invoice(
-            receiver.id(),
-            50_000.0,
-            "USD",
-            "Q1 consulting services",
-        );
+        let invoice =
+            sender.create_invoice(receiver.id(), 50_000.0, "USD", "Q1 consulting services");
 
         assert_eq!(invoice.tx_type, TransactionType::Invoice);
         assert_eq!(invoice.from, *sender.id());

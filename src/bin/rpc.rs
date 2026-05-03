@@ -12,7 +12,7 @@
 use std::env;
 use std::sync::Arc;
 
-use jsonic_protocol::api::{build_router, SharedNode};
+use jsonic_protocol::api::{SharedNode, build_router};
 use jsonic_protocol::core::heartbeat::JsonicNode;
 use jsonic_protocol::core::store::{ChainStore, SledStore};
 use tokio::net::TcpListener;
@@ -34,7 +34,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         );
         node.main_chain = restored;
     } else {
-        eprintln!("[jsonic-rpc] no prior chain at {}, starting fresh", data_dir);
+        eprintln!(
+            "[jsonic-rpc] no prior chain at {}, starting fresh",
+            data_dir
+        );
     }
 
     let shared: SharedNode = Arc::new(RwLock::new(node));

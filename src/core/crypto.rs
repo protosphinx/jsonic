@@ -134,7 +134,7 @@ mod tests {
     #[test]
     fn test_merkle_root_single() {
         let h = sha256_str("tx1");
-        let root = merkle_root(&[h.clone()]);
+        let root = merkle_root(std::slice::from_ref(&h));
         assert_eq!(root, h);
     }
 

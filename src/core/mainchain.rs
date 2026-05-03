@@ -15,7 +15,7 @@ use serde::{Deserialize, Serialize};
 use super::crypto::{merkle_root, sha256_str};
 use super::pot;
 use super::reputation::{
-    compute_dao_reward, compute_pagerank, NodeId, PageRankConfig, ReputationGraph,
+    NodeId, PageRankConfig, ReputationGraph, compute_dao_reward, compute_pagerank,
 };
 use super::types::{
     BlockHeader, DAOId, DAOSnapshot, Hash, MainChainBlock, NetworkMetrics, TokenDistribution,
@@ -107,10 +107,8 @@ impl MainChain {
 
         // Compute network metrics
         let anxiety = pot::compute_anxiety(self.total_transactions, self.invalid_transactions);
-        let adrenaline = pot::compute_adrenaline(
-            self.current_heartbeat_tx_count,
-            TARGET_TX_PER_HEARTBEAT,
-        );
+        let adrenaline =
+            pot::compute_adrenaline(self.current_heartbeat_tx_count, TARGET_TX_PER_HEARTBEAT);
         let heartbeat_ms = pot::adjusted_heartbeat_ms(BASE_HEARTBEAT_MS, adrenaline);
 
         let network_metrics = NetworkMetrics {
@@ -139,10 +137,7 @@ impl MainChain {
     /// - Volume of matched transactions
     /// - Value of matched transactions
     /// - Ratio of matched vs unmatched (low Anxiety contribution)
-    fn compute_token_distribution(
-        &self,
-        snapshots: &[DAOSnapshot],
-    ) -> Vec<TokenDistribution> {
+    fn compute_token_distribution(&self, snapshots: &[DAOSnapshot]) -> Vec<TokenDistribution> {
         let total_relevance: f64 = snapshots.iter().map(|s| s.relevance_score).sum();
 
         if total_relevance == 0.0 {
@@ -312,10 +307,7 @@ mod tests {
     #[test]
     fn test_no_tokens_when_no_activity() {
         let mut chain = MainChain::new();
-        let snapshots = vec![
-            make_snapshot("dao1", 0, 0.0),
-            make_snapshot("dao2", 0, 0.0),
-        ];
+        let snapshots = vec![make_snapshot("dao1", 0, 0.0), make_snapshot("dao2", 0, 0.0)];
 
         let distributions = chain.solstice(snapshots);
 

@@ -11,13 +11,13 @@
 //!
 //! Where:
 //! - `d`    = damping factor (0.85) — probability of following a transaction edge
-//!            vs. random jump
+//!   vs. random jump
 //! - `N`    = total number of nodes in the graph
 //! - `Ti`   = nodes that transact with A (in-edges: entities that bought from
-//!            or sold to A)
+//!   or sold to A)
 //! - `C(Ti)`= out-degree of Ti (number of unique trading partners)
 //! - `W(Ti → A)` = normalized edge weight from Ti to A, based on transaction
-//!            value and volume
+//!   value and volume
 //!
 //! # Jsonic-Specific Extensions
 //!
@@ -100,13 +100,7 @@ impl ReputationGraph {
     /// Add or update a transaction edge between two nodes.
     /// If an edge already exists between (from, to), the counts and values
     /// are accumulated.
-    pub fn add_transaction(
-        &mut self,
-        from: NodeId,
-        to: NodeId,
-        tx_count: u64,
-        tx_value: f64,
-    ) {
+    pub fn add_transaction(&mut self, from: NodeId, to: NodeId, tx_count: u64, tx_value: f64) {
         self.nodes.insert(from.clone());
         self.nodes.insert(to.clone());
 
@@ -240,10 +234,7 @@ pub struct ReputationScores {
 ///
 /// Dangling nodes (nodes with no outbound edges) distribute their rank
 /// uniformly across all nodes, just like in the original PageRank paper.
-pub fn compute_pagerank(
-    graph: &ReputationGraph,
-    config: &PageRankConfig,
-) -> ReputationScores {
+pub fn compute_pagerank(graph: &ReputationGraph, config: &PageRankConfig) -> ReputationScores {
     let n = graph.node_count();
     if n == 0 {
         return ReputationScores {
@@ -392,11 +383,7 @@ pub fn compute_pagerank(
 ///   transaction cannot dominate.
 /// - A Sybil ring of N fake buyers contributes ~0 because every fake's PR
 ///   converges to the random-walk baseline.
-pub fn compute_dao_reward(
-    dao: &NodeId,
-    graph: &ReputationGraph,
-    scores: &ReputationScores,
-) -> f64 {
+pub fn compute_dao_reward(dao: &NodeId, graph: &ReputationGraph, scores: &ReputationScores) -> f64 {
     let inbound_edges = match graph.inbound.get(dao) {
         Some(edges) => edges,
         None => return 0.0,
