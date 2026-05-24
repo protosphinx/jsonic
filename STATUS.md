@@ -31,6 +31,8 @@ ship as separate binaries (`jsonic-demo`, `jsonic-rpc`).
   tests drive the full lifecycle through the HTTP surface.
 - **Repo hygiene.** `jsonic_activity.json` removed; `.gitignore` updated for
   it and for the local sled directory. All em-dashes scrubbed from the docs.
+- **Hex encoding cleanup.** Removed the embedded `crypto.rs` helper in favor of
+  the standard `hex` crate.
 
 ## Open issues
 
@@ -60,8 +62,6 @@ ship as separate binaries (`jsonic-demo`, `jsonic-rpc`).
    dependabot, PR template, issue templates, CODEOWNERS.
 7. **Reputation graph pruning.** Cumulative graph grows without bound.
    Sliding window or eigenvector incremental update.
-8. **Embedded `mod hex` cleanup.** Pull in the `hex` crate instead of the
-   in-tree stub in `crypto.rs`.
 
 ## Reference
 

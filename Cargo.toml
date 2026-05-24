@@ -8,6 +8,7 @@ license = "CC-BY-SA-4.0"
 
 [dependencies]
 sha2 = "0.10"
+hex = "0.4"
 ed25519-dalek = { version = "2.1", features = ["rand_core", "serde"] }
 rand = "0.8"
 serde = { version = "1.0", features = ["derive"] }

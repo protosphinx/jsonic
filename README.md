@@ -16,9 +16,8 @@
 </p>
 
 <p align="center">
+  <img src="https://img.shields.io/badge/tests-61%20passing-yellowgreen" alt="Tests">
   <a href="https://github.com/protosphinx/jsonic/blob/main/LICENSE">
-![tests](https://img.shields.io/badge/tests-61%20passing-yellowgreen)
-
     <img src="https://img.shields.io/badge/license-CC--BY--SA--4.0-blue" alt="License">
   </a>
 </p>

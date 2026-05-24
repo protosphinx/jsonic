@@ -94,18 +94,6 @@ pub fn derive_dao_id(verifying_key: &VerifyingKey) -> String {
     hash[..40].to_string()
 }
 
-// We use hex encoding throughout; pull in the `hex` crate functionality
-// via sha2's re-export or a small inline helper.
-mod hex {
-    pub fn encode(bytes: impl AsRef<[u8]>) -> String {
-        bytes
-            .as_ref()
-            .iter()
-            .map(|b| format!("{:02x}", b))
-            .collect()
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
