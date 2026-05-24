@@ -17,10 +17,33 @@ use super::pot;
 use super::sidechain::SideChain;
 use super::types::{DAOId, TokenDistribution, Transaction, TransactionStatus};
 
+use ed25519_dalek::VerifyingKey;
 use std::collections::HashMap;
+use thiserror::Error;
 
 /// Number of heartbeats between Solstice events.
 const SOLSTICE_INTERVAL: u64 = 100;
+
+/// Why a transaction could not enter the node's validation pipeline.
+#[derive(Debug, Clone, PartialEq, Eq, Error)]
+pub enum SubmitError {
+    #[error("originating DAO {0} is not registered")]
+    UnknownOrigin(DAOId),
+    #[error("counterparty DAO {0} is not registered")]
+    UnknownCounterparty(DAOId),
+    #[error("DAO {0} has an invalid public key")]
+    InvalidPublicKey(DAOId),
+    #[error("transaction amount must be finite and positive")]
+    InvalidAmount,
+    #[error("invalid signature for DAO {0}")]
+    InvalidSignature(DAOId),
+    #[error("sequence mismatch for DAO {dao_id}: expected {expected}, got {actual}")]
+    SequenceMismatch {
+        dao_id: DAOId,
+        expected: u64,
+        actual: u64,
+    },
+}
 
 /// The Jsonic network node — ties together all protocol components.
 pub struct JsonicNode {
@@ -35,6 +58,8 @@ pub struct JsonicNode {
     pub base_heartbeat_ms: u64,
     /// Pending transactions awaiting POT matching.
     pending_matching: Vec<Transaction>,
+    /// Next sequence number expected from each registered DAO.
+    expected_sequences: HashMap<DAOId, u64>,
 }
 
 impl JsonicNode {
@@ -47,6 +72,7 @@ impl JsonicNode {
             solstice_interval: SOLSTICE_INTERVAL,
             base_heartbeat_ms: 60_000,
             pending_matching: Vec::new(),
+            expected_sequences: HashMap::new(),
         }
     }
 
@@ -54,20 +80,62 @@ impl JsonicNode {
     pub fn register_dao(&mut self, dao: super::types::DAO) {
         let id = dao.id.clone();
         self.registry.add(dao);
-        self.side_chains.insert(id.clone(), SideChain::new(id));
+        self.side_chains
+            .insert(id.clone(), SideChain::new(id.clone()));
+        self.expected_sequences.entry(id).or_insert(1);
     }
 
     /// Submit a transaction into the network.
-    /// The transaction is recorded on the sender's side-chain and queued
-    /// for POT matching with the counterparty.
-    pub fn submit_transaction(&mut self, tx: Transaction) {
+    /// The transaction is admitted only after basic POT preflight checks,
+    /// then recorded on the sender's side-chain and queued for matching.
+    pub fn submit_transaction(&mut self, tx: Transaction) -> Result<(), SubmitError> {
+        self.validate_inbound_transaction(&tx)?;
+
         // Record on the sender's side-chain
         if let Some(chain) = self.side_chains.get_mut(&tx.from) {
             chain.submit_transaction(tx.clone());
         }
 
         // Queue for matching
+        let from = tx.from.clone();
         self.pending_matching.push(tx);
+        *self.expected_sequences.entry(from).or_insert(1) += 1;
+        Ok(())
+    }
+
+    fn validate_inbound_transaction(&self, tx: &Transaction) -> Result<(), SubmitError> {
+        if !tx.amount.is_finite() || tx.amount <= 0.0 {
+            return Err(SubmitError::InvalidAmount);
+        }
+
+        let Some(origin) = self.registry.get(&tx.from) else {
+            return Err(SubmitError::UnknownOrigin(tx.from.clone()));
+        };
+        if self.registry.get(&tx.to).is_none() {
+            return Err(SubmitError::UnknownCounterparty(tx.to.clone()));
+        }
+
+        let public_key: [u8; 32] = origin
+            .public_key
+            .clone()
+            .try_into()
+            .map_err(|_| SubmitError::InvalidPublicKey(tx.from.clone()))?;
+        let verifying_key = VerifyingKey::from_bytes(&public_key)
+            .map_err(|_| SubmitError::InvalidPublicKey(tx.from.clone()))?;
+        if !pot::verify_signature(tx, &verifying_key) {
+            return Err(SubmitError::InvalidSignature(tx.from.clone()));
+        }
+
+        let expected = self.expected_sequences.get(&tx.from).copied().unwrap_or(1);
+        if !pot::verify_sequence(tx, expected) {
+            return Err(SubmitError::SequenceMismatch {
+                dao_id: tx.from.clone(),
+                expected,
+                actual: tx.sequence_number,
+            });
+        }
+
+        Ok(())
     }
 
     /// Execute one heartbeat tick.
@@ -283,8 +351,8 @@ mod tests {
         );
 
         // Submit both to the network
-        node.submit_transaction(invoice);
-        node.submit_transaction(payment);
+        node.submit_transaction(invoice).expect("submit invoice");
+        node.submit_transaction(payment).expect("submit payment");
 
         // Run heartbeats until Solstice
         let mut distributions = None;
@@ -351,18 +419,18 @@ mod tests {
         for _ in 0..30 {
             let inv = a.create_invoice(&b_id, 10_000.0, "USD", "h");
             let pay = b.create_payment(&a_id, 10_000.0, "USD", &inv.id, "h");
-            node.submit_transaction(inv);
-            node.submit_transaction(pay);
+            node.submit_transaction(inv).expect("submit honest invoice");
+            node.submit_transaction(pay).expect("submit honest payment");
 
             let inv = b.create_invoice(&c_id, 10_000.0, "USD", "h");
             let pay = c.create_payment(&b_id, 10_000.0, "USD", &inv.id, "h");
-            node.submit_transaction(inv);
-            node.submit_transaction(pay);
+            node.submit_transaction(inv).expect("submit honest invoice");
+            node.submit_transaction(pay).expect("submit honest payment");
 
             let inv = c.create_invoice(&a_id, 10_000.0, "USD", "h");
             let pay = a.create_payment(&c_id, 10_000.0, "USD", &inv.id, "h");
-            node.submit_transaction(inv);
-            node.submit_transaction(pay);
+            node.submit_transaction(inv).expect("submit honest invoice");
+            node.submit_transaction(pay).expect("submit honest payment");
         }
 
         // Sybil ring: 100 fakes, each settles one $100,000 invoice from
@@ -378,8 +446,8 @@ mod tests {
             let fake_id = fake.id().clone();
             let inv = sybil.create_invoice(&fake_id, 100_000.0, "USD", "s");
             let pay = fake.create_payment(&sybil_id, 100_000.0, "USD", &inv.id, "s");
-            node.submit_transaction(inv);
-            node.submit_transaction(pay);
+            node.submit_transaction(inv).expect("submit sybil invoice");
+            node.submit_transaction(pay).expect("submit sybil payment");
         }
 
         // Drain pending matches across many heartbeats, then force a Solstice.
@@ -420,5 +488,68 @@ mod tests {
 
         assert!(node.side_chains.contains_key(&id));
         assert_eq!(node.registry.count(), 1);
+    }
+
+    #[test]
+    fn test_submit_rejects_forged_signature() {
+        let mut node = JsonicNode::new();
+        let mut sender = RegisteredDAO::register("Sender", "Manufacturing");
+        let receiver = RegisteredDAO::register("Receiver", "Retail");
+        let receiver_id = receiver.id().clone();
+
+        node.register_dao(sender.dao.clone());
+        node.register_dao(receiver.dao.clone());
+
+        let mut tx = sender.create_invoice(&receiver_id, 100.0, "USD", "parts");
+        tx.amount = 1_000_000.0;
+
+        let err = node
+            .submit_transaction(tx)
+            .expect_err("tampered transaction should be rejected");
+        assert!(matches!(err, SubmitError::InvalidSignature(_)));
+        assert_eq!(node.pending_count(), 0);
+    }
+
+    #[test]
+    fn test_submit_rejects_replay_sequence() {
+        let mut node = JsonicNode::new();
+        let mut sender = RegisteredDAO::register("Sender", "Manufacturing");
+        let receiver = RegisteredDAO::register("Receiver", "Retail");
+        let receiver_id = receiver.id().clone();
+        let sender_id = sender.id().clone();
+
+        node.register_dao(sender.dao.clone());
+        node.register_dao(receiver.dao.clone());
+
+        let tx = sender.create_invoice(&receiver_id, 100.0, "USD", "parts");
+        node.submit_transaction(tx.clone()).expect("first submit");
+
+        let err = node
+            .submit_transaction(tx)
+            .expect_err("replayed sequence should be rejected");
+        assert_eq!(
+            err,
+            SubmitError::SequenceMismatch {
+                dao_id: sender_id,
+                expected: 2,
+                actual: 1,
+            }
+        );
+        assert_eq!(node.pending_count(), 1);
+    }
+
+    #[test]
+    fn test_submit_rejects_unknown_counterparty() {
+        let mut node = JsonicNode::new();
+        let mut sender = RegisteredDAO::register("Sender", "Manufacturing");
+        let receiver = RegisteredDAO::register("Receiver", "Retail");
+
+        node.register_dao(sender.dao.clone());
+
+        let tx = sender.create_invoice(receiver.id(), 100.0, "USD", "parts");
+        let err = node
+            .submit_transaction(tx)
+            .expect_err("unknown counterparty should be rejected");
+        assert!(matches!(err, SubmitError::UnknownCounterparty(_)));
     }
 }

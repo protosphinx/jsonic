@@ -3,7 +3,7 @@
 ## Current state
 
 Reference implementation of the Jsonic Layer 1 protocol in Rust: ~3500 lines
-across 9 core modules + an HTTP API + 2 binaries. 61 tests passing in <0.2s.
+across 9 core modules + an HTTP API + 2 binaries. 64 tests passing in <0.3s.
 Persistent state via sled, JSON-RPC server over HTTP. Demo and RPC server
 ship as separate binaries (`jsonic-demo`, `jsonic-rpc`).
 
@@ -29,6 +29,9 @@ ship as separate binaries (`jsonic-demo`, `jsonic-rpc`).
   `/metrics`, `/balance/:dao_id`, `/reputation/:dao_id`. Restores main-chain
   state from sled on startup, persists it on graceful shutdown. Integration
   tests drive the full lifecycle through the HTTP surface.
+- **Transaction admission hardening.** Nodes now reject unregistered
+  counterparties, forged signatures, invalid amounts, and replayed or
+  out-of-order sequence numbers before transactions reach side-chains.
 - **Repo hygiene.** `jsonic_activity.json` removed; `.gitignore` updated for
   it and for the local sled directory. All em-dashes scrubbed from the docs.
 - **Hex encoding cleanup.** Removed the embedded `crypto.rs` helper in favor of

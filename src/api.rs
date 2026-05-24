@@ -29,7 +29,6 @@ use axum::{
 use serde::{Deserialize, Serialize};
 use tokio::sync::RwLock;
 
-use crate::core::dao::DAORegistry;
 use crate::core::heartbeat::JsonicNode;
 use crate::core::reputation::{NodeId, PageRankConfig, compute_pagerank};
 use crate::core::types::{BalanceSheet, DAO, DAOId, MainChainBlock, NetworkMetrics, Transaction};
@@ -130,17 +129,16 @@ async fn submit_transaction(
     Json(tx): Json<Transaction>,
 ) -> impl IntoResponse {
     let mut guard = node.write().await;
-    if !registered(&guard.registry, &tx.from) {
-        return (
+    match guard.submit_transaction(tx) {
+        Ok(()) => StatusCode::ACCEPTED.into_response(),
+        Err(err) => (
             StatusCode::BAD_REQUEST,
             Json(ErrorResponse {
-                error: format!("originating DAO {} is not registered", tx.from),
+                error: err.to_string(),
             }),
         )
-            .into_response();
+            .into_response(),
     }
-    guard.submit_transaction(tx);
-    StatusCode::ACCEPTED.into_response()
 }
 
 async fn heartbeat(
@@ -240,10 +238,6 @@ async fn get_reputation(
         baseline: scores.baseline_rank,
         trust,
     })
-}
-
-fn registered(registry: &DAORegistry, dao_id: &DAOId) -> bool {
-    registry.get(dao_id).is_some()
 }
 
 // ---------------------------------------------------------------------------

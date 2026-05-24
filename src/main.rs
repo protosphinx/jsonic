@@ -80,7 +80,7 @@ fn main() {
         acme.dao.profile.name, globex.dao.profile.name, inv1.description
     );
     let inv1_id = inv1.id.clone();
-    node.submit_transaction(inv1);
+    node.submit_transaction(inv1).expect("submit invoice 1");
 
     // Globex pays Acme's invoice
     let pay1 = globex.create_payment(
@@ -94,7 +94,7 @@ fn main() {
         "  💰 Payment: {} → {} | $50,000 | settles invoice",
         globex.dao.profile.name, acme.dao.profile.name
     );
-    node.submit_transaction(pay1);
+    node.submit_transaction(pay1).expect("submit payment 1");
 
     // Initech invoices Acme for consulting
     let inv2 = initech.create_invoice(&acme_id, 30_000.0, "USD", "Strategy consulting Jan 2024");
@@ -103,7 +103,7 @@ fn main() {
         initech.dao.profile.name, acme.dao.profile.name, inv2.description
     );
     let inv2_id = inv2.id.clone();
-    node.submit_transaction(inv2);
+    node.submit_transaction(inv2).expect("submit invoice 2");
 
     // Acme pays Initech
     let pay2 = acme.create_payment(
@@ -117,7 +117,7 @@ fn main() {
         "  💰 Payment: {} → {} | $30,000 | settles invoice",
         acme.dao.profile.name, initech.dao.profile.name
     );
-    node.submit_transaction(pay2);
+    node.submit_transaction(pay2).expect("submit payment 2");
 
     // Globex invoices Initech for manufacturing
     let inv3 = globex.create_invoice(&initech_id, 75_000.0, "EUR", "Custom parts manufacturing");
@@ -125,7 +125,7 @@ fn main() {
         "  📄 Invoice: {} → {} | €75,000 | '{}'",
         globex.dao.profile.name, initech.dao.profile.name, inv3.description
     );
-    node.submit_transaction(inv3);
+    node.submit_transaction(inv3).expect("submit invoice 3");
     // This invoice is NOT paid — it will remain unmatched
 
     println!();
