@@ -1,9 +1,9 @@
-//! Persistence layer for the Jsonic main-chain.
+//! Persistence layer for Jsonic node state.
 //!
 //! Defines a `ChainStore` trait so callers can plug in different backends
 //! (in-memory for tests, sled for production). The reference implementation
-//! persists `MainChain` state (blocks, token supply, reputation graph) at
-//! Solstice; side-chain state is per-DAO and out of scope for v1.
+//! persists full `JsonicNode` state, including the main-chain, registered DAOs,
+//! side-chains, pending transactions, heartbeat tick, and sequence counters.
 //!
 //! All serialization goes through `bincode` for compactness and speed.
 
@@ -12,6 +12,7 @@ use std::sync::Mutex;
 
 use thiserror::Error;
 
+use super::heartbeat::JsonicNode;
 use super::mainchain::MainChain;
 
 #[derive(Debug, Error)]
@@ -25,15 +26,26 @@ pub enum StoreError {
 pub type StoreResult<T> = Result<T, StoreError>;
 
 const KEY_MAIN_CHAIN: &[u8] = b"main_chain";
+const KEY_NODE: &[u8] = b"node";
 
-/// A persistent store for main-chain state. Implementations must be
+/// A persistent store for node and main-chain state. Implementations must be
 /// thread-safe; concurrent saves and loads are expected from an RPC server.
 pub trait ChainStore: Send + Sync {
+    /// Persist the full node state. Overwrites any previous snapshot.
+    fn save_node(&self, node: &JsonicNode) -> StoreResult<()>;
+
+    /// Load the full node state if any has been saved. Returns `None`
+    /// on a fresh store.
+    fn load_node(&self) -> StoreResult<Option<JsonicNode>>;
+
     /// Persist the full main-chain state. Overwrites any previous snapshot.
+    ///
+    /// Kept for compatibility with older stores and tests. New nodes should
+    /// prefer `save_node` so registry and side-chain state survive restart.
     fn save_main_chain(&self, chain: &MainChain) -> StoreResult<()>;
 
     /// Load the main-chain state if any has been saved. Returns `None`
-    /// on a fresh store.
+    /// on a fresh store. Used as a migration fallback for pre-node snapshots.
     fn load_main_chain(&self) -> StoreResult<Option<MainChain>>;
 }
 
@@ -54,6 +66,27 @@ impl MemoryStore {
 }
 
 impl ChainStore for MemoryStore {
+    fn save_node(&self, node: &JsonicNode) -> StoreResult<()> {
+        let bytes = bincode::serialize(node)?;
+        let mut guard = self
+            .inner
+            .lock()
+            .map_err(|e| StoreError::Backend(format!("mutex poisoned: {e}")))?;
+        *guard = Some(bytes);
+        Ok(())
+    }
+
+    fn load_node(&self) -> StoreResult<Option<JsonicNode>> {
+        let guard = self
+            .inner
+            .lock()
+            .map_err(|e| StoreError::Backend(format!("mutex poisoned: {e}")))?;
+        match guard.as_ref() {
+            Some(bytes) => Ok(Some(bincode::deserialize(bytes)?)),
+            None => Ok(None),
+        }
+    }
+
     fn save_main_chain(&self, chain: &MainChain) -> StoreResult<()> {
         let bytes = bincode::serialize(chain)?;
         let mut guard = self
@@ -94,6 +127,28 @@ impl SledStore {
 }
 
 impl ChainStore for SledStore {
+    fn save_node(&self, node: &JsonicNode) -> StoreResult<()> {
+        let bytes = bincode::serialize(node)?;
+        self.db
+            .insert(KEY_NODE, bytes)
+            .map_err(|e| StoreError::Backend(e.to_string()))?;
+        self.db
+            .flush()
+            .map_err(|e| StoreError::Backend(e.to_string()))?;
+        Ok(())
+    }
+
+    fn load_node(&self) -> StoreResult<Option<JsonicNode>> {
+        let raw = self
+            .db
+            .get(KEY_NODE)
+            .map_err(|e| StoreError::Backend(e.to_string()))?;
+        match raw {
+            Some(bytes) => Ok(Some(bincode::deserialize(&bytes)?)),
+            None => Ok(None),
+        }
+    }
+
     fn save_main_chain(&self, chain: &MainChain) -> StoreResult<()> {
         let bytes = bincode::serialize(chain)?;
         self.db
@@ -120,6 +175,8 @@ impl ChainStore for SledStore {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::core::dao::RegisteredDAO;
+    use crate::core::heartbeat::JsonicNode;
     use crate::core::types::BalanceSheet;
     use crate::core::types::DAOSnapshot;
 
@@ -155,6 +212,26 @@ mod tests {
         }
     }
 
+    fn fixture_node() -> JsonicNode {
+        let mut node = JsonicNode::new();
+        node.solstice_interval = 5;
+
+        let mut seller = RegisteredDAO::register("Seller", "Manufacturing");
+        let mut buyer = RegisteredDAO::register("Buyer", "Retail");
+        let seller_id = seller.id().clone();
+        let buyer_id = buyer.id().clone();
+
+        node.register_dao(seller.dao.clone());
+        node.register_dao(buyer.dao.clone());
+
+        let invoice = seller.create_invoice(&buyer_id, 250.0, "USD", "widgets");
+        let payment = buyer.create_payment(&seller_id, 250.0, "USD", &invoice.id, "paid");
+        node.submit_transaction(invoice).expect("invoice");
+        node.submit_transaction(payment).expect("payment");
+        node.heartbeat();
+        node
+    }
+
     #[test]
     fn memory_store_roundtrip() {
         let chain = fixture_chain();
@@ -168,6 +245,20 @@ mod tests {
     fn memory_store_empty_returns_none() {
         let store = MemoryStore::new();
         assert!(store.load_main_chain().expect("load").is_none());
+    }
+
+    #[test]
+    fn memory_store_node_roundtrip() {
+        let node = fixture_node();
+        let store = MemoryStore::new();
+        store.save_node(&node).expect("save");
+        let restored = store.load_node().expect("load").expect("present");
+
+        assert_eq!(restored.tick, node.tick);
+        assert_eq!(restored.registry.count(), node.registry.count());
+        assert_eq!(restored.side_chains.len(), node.side_chains.len());
+        assert_eq!(restored.pending_count(), node.pending_count());
+        assert_eq!(restored.main_chain.height(), node.main_chain.height());
     }
 
     #[test]
@@ -185,6 +276,66 @@ mod tests {
         let store = SledStore::open(&path).expect("reopen");
         let restored = store.load_main_chain().expect("load").expect("present");
         assert_round_trip_equal(&chain, &restored);
+    }
+
+    #[test]
+    fn sled_store_node_roundtrip_survives_reopen() {
+        let dir = tempfile::tempdir().expect("tempdir");
+        let path = dir.path().join("node.db");
+
+        let node = fixture_node();
+        {
+            let store = SledStore::open(&path).expect("open");
+            store.save_node(&node).expect("save");
+        }
+
+        let store = SledStore::open(&path).expect("reopen");
+        let restored = store.load_node().expect("load").expect("present");
+        assert_eq!(restored.tick, node.tick);
+        assert_eq!(restored.registry.count(), node.registry.count());
+        assert_eq!(restored.side_chains.len(), node.side_chains.len());
+        assert_eq!(restored.pending_count(), node.pending_count());
+    }
+
+    #[test]
+    fn sled_store_restored_node_can_continue_processing() {
+        let dir = tempfile::tempdir().expect("tempdir");
+        let path = dir.path().join("live-node.db");
+
+        let mut node = JsonicNode::new();
+        node.solstice_interval = 3;
+
+        let mut seller = RegisteredDAO::register("Seller", "Manufacturing");
+        let mut buyer = RegisteredDAO::register("Buyer", "Retail");
+        let seller_id = seller.id().clone();
+        let buyer_id = buyer.id().clone();
+
+        node.register_dao(seller.dao.clone());
+        node.register_dao(buyer.dao.clone());
+
+        let invoice = seller.create_invoice(&buyer_id, 500.0, "USD", "widgets");
+        node.submit_transaction(invoice.clone()).expect("invoice");
+        node.heartbeat();
+
+        {
+            let store = SledStore::open(&path).expect("open");
+            store.save_node(&node).expect("save");
+        }
+
+        let store = SledStore::open(&path).expect("reopen");
+        let mut restored = store.load_node().expect("load").expect("present");
+
+        let payment = buyer.create_payment(&seller_id, 500.0, "USD", &invoice.id, "paid");
+        restored.submit_transaction(payment).expect("payment");
+
+        assert!(restored.heartbeat().is_none());
+        let dist = restored
+            .heartbeat()
+            .expect("third heartbeat should trigger Solstice");
+
+        assert_eq!(restored.main_chain.height(), 1);
+        assert_eq!(restored.pending_count(), 0);
+        assert!(dist.iter().any(|d| d.dao_id == seller_id));
     }
 
     #[test]

@@ -7,6 +7,7 @@
 //!
 //! Environment:
 //!   JSONIC_RPC_ADDR        bind address (default 127.0.0.1:8080)
+//!   PORT                   public host port fallback, binds 0.0.0.0:$PORT
 //!   JSONIC_RPC_DATA_DIR    sled directory (default ./jsonic-data)
 
 use std::env;
@@ -21,24 +22,36 @@ use tokio::sync::RwLock;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let addr = env::var("JSONIC_RPC_ADDR").unwrap_or_else(|_| "127.0.0.1:8080".to_string());
+    let addr = env::var("JSONIC_RPC_ADDR")
+        .or_else(|_| env::var("PORT").map(|port| format!("0.0.0.0:{port}")))
+        .unwrap_or_else(|_| "127.0.0.1:8080".to_string());
     let data_dir = env::var("JSONIC_RPC_DATA_DIR").unwrap_or_else(|_| "./jsonic-data".to_string());
 
     let store = SledStore::open(&data_dir)?;
-    let mut node = JsonicNode::new();
-    if let Some(restored) = store.load_main_chain()? {
+    let node = if let Some(restored) = store.load_node()? {
         eprintln!(
-            "[jsonic-rpc] restored main-chain at height {} from {}",
+            "[jsonic-rpc] restored node at height {} tick {} from {}",
+            restored.main_chain.height(),
+            restored.tick,
+            data_dir
+        );
+        restored
+    } else if let Some(restored) = store.load_main_chain()? {
+        eprintln!(
+            "[jsonic-rpc] restored legacy main-chain at height {} from {}",
             restored.height(),
             data_dir
         );
+        let mut node = JsonicNode::new();
         node.main_chain = restored;
+        node
     } else {
         eprintln!(
             "[jsonic-rpc] no prior chain at {}, starting fresh",
             data_dir
         );
-    }
+        JsonicNode::new()
+    };
 
     let shared: SharedNode = Arc::new(RwLock::new(node));
     let app = build_router(shared.clone());
@@ -50,11 +63,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .with_graceful_shutdown(shutdown_signal())
         .await?;
 
-    let final_chain = shared.read().await.main_chain.clone();
-    store.save_main_chain(&final_chain)?;
+    let final_node = shared.read().await.clone();
+    store.save_node(&final_node)?;
     eprintln!(
-        "[jsonic-rpc] persisted main-chain at height {} to {}",
-        final_chain.height(),
+        "[jsonic-rpc] persisted node at height {} tick {} to {}",
+        final_node.main_chain.height(),
+        final_node.tick,
         data_dir
     );
     Ok(())

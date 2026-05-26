@@ -5,6 +5,7 @@
 //! and query state without linking the protocol crate directly.
 //!
 //! Routes:
+//!   GET  /                        service index
 //!   GET  /health                  liveness probe
 //!   POST /daos                    register a DAO (body: DAO JSON)
 //!   POST /transactions            submit a signed transaction (body: Transaction JSON)
@@ -38,6 +39,7 @@ pub type SharedNode = Arc<RwLock<JsonicNode>>;
 
 pub fn build_router(node: SharedNode) -> Router {
     Router::new()
+        .route("/", get(index))
         .route("/health", get(health))
         .route("/daos", post(register_dao))
         .route("/transactions", post(submit_transaction))
@@ -59,6 +61,14 @@ struct HealthResponse {
     height: u64,
     pending: usize,
     tick: u64,
+}
+
+#[derive(Serialize)]
+struct IndexResponse {
+    service: &'static str,
+    status: &'static str,
+    version: &'static str,
+    endpoints: &'static [&'static str],
 }
 
 #[derive(Serialize)]
@@ -103,6 +113,24 @@ struct ErrorResponse {
 // ---------------------------------------------------------------------------
 // Handlers
 // ---------------------------------------------------------------------------
+
+async fn index() -> Json<IndexResponse> {
+    Json(IndexResponse {
+        service: "Jsonic RPC",
+        status: "ok",
+        version: env!("CARGO_PKG_VERSION"),
+        endpoints: &[
+            "GET /health",
+            "POST /daos",
+            "POST /transactions",
+            "POST /heartbeats",
+            "GET /blocks/:height",
+            "GET /metrics",
+            "GET /balance/:dao_id",
+            "GET /reputation/:dao_id",
+        ],
+    })
+}
 
 async fn health(State(node): State<SharedNode>) -> Json<HealthResponse> {
     let guard = node.read().await;
@@ -284,6 +312,26 @@ mod tests {
         assert_eq!(v["status"], "ok");
         assert_eq!(v["height"], 0);
         assert_eq!(v["tick"], 0);
+    }
+
+    #[tokio::test]
+    async fn index_reports_service_surface() {
+        let node = fresh_node();
+        let app = build_router(node);
+        let resp = app
+            .oneshot(Request::builder().uri("/").body(Body::empty()).unwrap())
+            .await
+            .unwrap();
+        assert_eq!(resp.status(), StatusCode::OK);
+        let v = body_json(resp).await;
+        assert_eq!(v["service"], "Jsonic RPC");
+        assert_eq!(v["status"], "ok");
+        assert!(
+            v["endpoints"]
+                .as_array()
+                .unwrap()
+                .contains(&json!("GET /health"))
+        );
     }
 
     #[tokio::test]

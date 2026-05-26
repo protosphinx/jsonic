@@ -5,6 +5,7 @@
 //! cannot become DAOs — the network is exclusively B2B.
 
 use chrono::Utc;
+use serde::{Deserialize, Serialize};
 
 use super::crypto::{KeyPair, derive_dao_id, generate_keypair, sign};
 use super::types::{DAO, DAOId, DAOProfile, Transaction, TransactionStatus, TransactionType};
@@ -167,6 +168,7 @@ impl RegisteredDAO {
 }
 
 /// Registry that tracks all DAOs on the network.
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct DAORegistry {
     daos: Vec<DAO>,
 }

@@ -9,6 +9,7 @@
 //! to the main-chain.
 
 use chrono::Utc;
+use serde::{Deserialize, Serialize};
 
 use super::crypto::{merkle_root, sha256_str};
 use super::types::{
@@ -24,6 +25,7 @@ const DEFAULT_MATERIALITY: f64 = 0.05;
 /// Minimum absolute value to trigger a block when the chain is empty.
 const MINIMUM_BLOCK_VALUE: f64 = 100.0;
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SideChain {
     pub dao_id: DAOId,
     pub blocks: Vec<SideChainBlock>,

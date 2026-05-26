@@ -16,7 +16,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/tests-64%20passing-yellowgreen" alt="Tests">
+  <img src="https://img.shields.io/badge/tests-67%20passing-yellowgreen" alt="Tests">
   <a href="https://github.com/protosphinx/jsonic/blob/main/LICENSE">
     <img src="https://img.shields.io/badge/license-CC--BY--SA--4.0-blue" alt="License">
   </a>
@@ -129,7 +129,7 @@ cargo run --bin jsonic-demo
 cargo run --bin jsonic-rpc
 # then: curl http://127.0.0.1:8080/health
 
-# Run tests (64 tests: crypto, POT, PageRank, side-chain, main-chain,
+# Run tests (67 tests: crypto, POT, PageRank, side-chain, main-chain,
 # end-to-end Sybil resistance, persistence round-trips, RPC integration)
 cargo test
 ```
@@ -147,9 +147,70 @@ cargo test
 | GET    | `/balance/:dao_id` | Token balance + side-chain balance sheet |
 | GET    | `/reputation/:dao_id` | PageRank score, baseline, and trust |
 
+`GET /` returns a compact service index so the root domain has a useful
+response when the node is hosted publicly.
+
 State is persisted to a sled database (configurable via `JSONIC_RPC_DATA_DIR`).
-On clean shutdown the latest main-chain snapshot is written back, so a node
-restart resumes from the same height with the same reputation history.
+On clean shutdown the full node snapshot is written back, so a restart resumes
+with the same main-chain, DAO registry, side-chains, pending transactions,
+sequence counters, heartbeat tick, and reputation history.
+
+### Hosting jsonic.org
+
+The RPC node can be hosted anywhere that runs a Docker container or a Rust
+binary. For container hosts:
+
+```bash
+docker build -t jsonic-rpc .
+docker run --rm -p 8080:8080 -v jsonic-data:/data jsonic-rpc
+```
+
+For platforms that inject a `PORT` environment variable, `jsonic-rpc` will bind
+to `0.0.0.0:$PORT` automatically. Otherwise set:
+
+```bash
+JSONIC_RPC_ADDR=0.0.0.0:8080
+JSONIC_RPC_DATA_DIR=/data
+```
+
+In GoDaddy, keep the domain registered there and update the DNS records to point
+at the hosting provider:
+
+| Host | Type | Value |
+|---|---|---|
+| `@` | `A` or provider-specified apex record | Hosting provider target |
+| `www` | `CNAME` | Hosting provider target |
+
+If the host also asks for a verification `TXT` record, add that before enabling
+TLS. Remove conflicting old `A`, `AAAA`, or `CNAME` records for `@` and `www`
+only after you have the replacement records from the host.
+
+## SDKs and MCP
+
+The Rust crate is the native SDK for embedding the protocol engine directly.
+The TypeScript SDK wraps the running JSON-RPC node:
+
+```bash
+cd sdk/typescript
+npm install
+npm run build
+```
+
+```ts
+import { JsonicClient } from "@protosphinx/jsonic-sdk";
+
+const jsonic = new JsonicClient({ baseUrl: "http://127.0.0.1:8080" });
+console.log(await jsonic.health());
+```
+
+The MCP server exposes node operations as tools for agent clients:
+
+```bash
+cd mcp
+npm install
+npm run build
+JSONIC_RPC_URL=http://127.0.0.1:8080 node dist/server.js
+```
 
 ## Codebase
 
@@ -170,6 +231,11 @@ src/
 │   └── rpc.rs          # jsonic-rpc binary: HTTP server with sled persistence
 ├── lib.rs
 └── main.rs             # jsonic-demo binary: full in-process lifecycle
+```
+
+```
+sdk/typescript/         # TypeScript JSON-RPC client SDK
+mcp/                    # MCP stdio server for a running Jsonic node
 ```
 
 ## Technical Paper

@@ -18,6 +18,7 @@ use super::sidechain::SideChain;
 use super::types::{DAOId, TokenDistribution, Transaction, TransactionStatus};
 
 use ed25519_dalek::VerifyingKey;
+use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use thiserror::Error;
 
@@ -46,6 +47,7 @@ pub enum SubmitError {
 }
 
 /// The Jsonic network node — ties together all protocol components.
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct JsonicNode {
     pub registry: DAORegistry,
     pub main_chain: MainChain,

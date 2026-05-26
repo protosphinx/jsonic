@@ -3,9 +3,10 @@
 ## Current state
 
 Reference implementation of the Jsonic Layer 1 protocol in Rust: ~3500 lines
-across 9 core modules + an HTTP API + 2 binaries. 64 tests passing in <0.3s.
-Persistent state via sled, JSON-RPC server over HTTP. Demo and RPC server
-ship as separate binaries (`jsonic-demo`, `jsonic-rpc`).
+across 9 core modules + an HTTP API + 2 binaries. 67 tests passing in <0.3s.
+Persistent full-node state via sled, JSON-RPC server over HTTP, TypeScript SDK,
+and MCP stdio server. Demo and RPC server ship as separate binaries
+(`jsonic-demo`, `jsonic-rpc`).
 
 ## Recently shipped
 
@@ -22,13 +23,17 @@ ship as separate binaries (`jsonic-demo`, `jsonic-rpc`).
   sections updated to the trust-floor formulation; stronger Sybil bound
   proved (constant in k, not O(k/N)).
 - **Persistence layer.** `ChainStore` trait with `MemoryStore` and
-  `SledStore` impls. `MainChain` is now `Serialize/Deserialize`. Round-trip
-  tests including a sled-reopen survival test.
+  `SledStore` impls. Full `JsonicNode` state is now `Serialize/Deserialize`:
+  main-chain, registry, side-chains, pending transactions, sequence counters,
+  heartbeat tick, and reputation graph. Round-trip tests include sled reopen.
 - **JSON-RPC server.** `jsonic-rpc` binary serves an Axum router exposing
   `/health`, `/daos`, `/transactions`, `/heartbeats`, `/blocks/:height`,
-  `/metrics`, `/balance/:dao_id`, `/reputation/:dao_id`. Restores main-chain
+  `/metrics`, `/balance/:dao_id`, `/reputation/:dao_id`. Restores full node
   state from sled on startup, persists it on graceful shutdown. Integration
   tests drive the full lifecycle through the HTTP surface.
+- **SDK and MCP surface.** Added `@protosphinx/jsonic-sdk`, a TypeScript
+  JSON-RPC client, and `@protosphinx/jsonic-mcp`, an MCP stdio server exposing
+  health, heartbeat, block, metrics, balance, and reputation tools.
 - **Transaction admission hardening.** Nodes now reject unregistered
   counterparties, forged signatures, invalid amounts, and replayed or
   out-of-order sequence numbers before transactions reach side-chains.
@@ -51,19 +56,16 @@ ship as separate binaries (`jsonic-demo`, `jsonic-rpc`).
 
 1. **P2P / libp2p layer.** RPC is in; gossip and node discovery are next.
    Currently a single-node HTTP node, not yet a multi-node network.
-2. **Side-chain persistence.** Only `MainChain` is in the store today.
-   Side-chains regenerate from heartbeat replay; for production they should
-   round-trip too.
-3. **Adversarial test suite for POT.** Replay attacks, sequence-gap attacks,
+2. **Adversarial test suite for POT.** Replay attacks, sequence-gap attacks,
    double-spend, forged signatures, side-chain forks, partial-eclipse.
-4. **Property tests + fuzz targets.** `proptest` over PageRank invariants,
+3. **Property tests + fuzz targets.** `proptest` over PageRank invariants,
    `cargo-fuzz` on transaction deserialization and signature verification.
-5. **Parametric tokenomics.** Move `BASE_MINT_PER_SOLSTICE`,
+4. **Parametric tokenomics.** Move `BASE_MINT_PER_SOLSTICE`,
    `SOLSTICE_INTERVAL`, `damping`, `materiality` into a `Genesis` /
    `ChainParams` struct loaded from `genesis.toml`.
-6. **`.github/` scaffold.** CI (fmt, clippy -D warnings, test, audit),
+5. **`.github/` scaffold.** CI (fmt, clippy -D warnings, test, audit),
    dependabot, PR template, issue templates, CODEOWNERS.
-7. **Reputation graph pruning.** Cumulative graph grows without bound.
+6. **Reputation graph pruning.** Cumulative graph grows without bound.
    Sliding window or eigenvector incremental update.
 
 ## Reference

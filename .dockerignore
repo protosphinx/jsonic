@@ -1,0 +1,10 @@
+target/
+.git/
+.github/
+jsonic-data/
+node_modules/
+mcp/node_modules/
+sdk/typescript/node_modules/
+npm-debug.log*
+Dockerfile
+.DS_Store
