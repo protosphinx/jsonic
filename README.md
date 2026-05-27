@@ -16,7 +16,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/tests-67%20passing-yellowgreen" alt="Tests">
+  <img src="https://img.shields.io/badge/tests-68%20passing-yellowgreen" alt="Tests">
   <a href="https://github.com/protosphinx/jsonic/blob/main/LICENSE">
     <img src="https://img.shields.io/badge/license-CC--BY--SA--4.0-blue" alt="License">
   </a>
@@ -129,7 +129,7 @@ cargo run --bin jsonic-demo
 cargo run --bin jsonic-rpc
 # then: curl http://127.0.0.1:8080/health
 
-# Run tests (67 tests: crypto, POT, PageRank, side-chain, main-chain,
+# Run tests (68 tests: crypto, POT, PageRank, side-chain, main-chain,
 # end-to-end Sybil resistance, persistence round-trips, RPC integration)
 cargo test
 ```
@@ -147,8 +147,8 @@ cargo test
 | GET    | `/balance/:dao_id` | Token balance + side-chain balance sheet |
 | GET    | `/reputation/:dao_id` | PageRank score, baseline, and trust |
 
-`GET /` returns a compact service index so the root domain has a useful
-response when the node is hosted publicly.
+`GET /` serves the public Jsonic L1 marketing site. The RPC surface remains
+available through the explicit API endpoints listed above.
 
 State is persisted to a sled database (configurable via `JSONIC_RPC_DATA_DIR`).
 On clean shutdown the full node snapshot is written back, so a restart resumes

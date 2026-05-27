@@ -5,7 +5,7 @@
 //! and query state without linking the protocol crate directly.
 //!
 //! Routes:
-//!   GET  /                        service index
+//!   GET  /                        marketing site
 //!   GET  /health                  liveness probe
 //!   POST /daos                    register a DAO (body: DAO JSON)
 //!   POST /transactions            submit a signed transaction (body: Transaction JSON)
@@ -24,7 +24,7 @@ use axum::{
     Router,
     extract::{Path, State},
     http::StatusCode,
-    response::{IntoResponse, Json},
+    response::{Html, IntoResponse, Json},
     routing::{get, post},
 };
 use serde::{Deserialize, Serialize};
@@ -61,14 +61,6 @@ struct HealthResponse {
     height: u64,
     pending: usize,
     tick: u64,
-}
-
-#[derive(Serialize)]
-struct IndexResponse {
-    service: &'static str,
-    status: &'static str,
-    version: &'static str,
-    endpoints: &'static [&'static str],
 }
 
 #[derive(Serialize)]
@@ -114,22 +106,19 @@ struct ErrorResponse {
 // Handlers
 // ---------------------------------------------------------------------------
 
-async fn index() -> Json<IndexResponse> {
-    Json(IndexResponse {
-        service: "Jsonic RPC",
-        status: "ok",
-        version: env!("CARGO_PKG_VERSION"),
-        endpoints: &[
-            "GET /health",
-            "POST /daos",
-            "POST /transactions",
-            "POST /heartbeats",
-            "GET /blocks/:height",
-            "GET /metrics",
-            "GET /balance/:dao_id",
-            "GET /reputation/:dao_id",
-        ],
-    })
+const LOGO_MARK: &str = include_str!("../assets/brand/logo-jsconic-mark-color.svg");
+
+async fn index() -> Html<String> {
+    Html(marketing_page())
+}
+
+fn marketing_page() -> String {
+    let mut html =
+        String::with_capacity(MARKETING_HEAD.len() + LOGO_MARK.len() + MARKETING_TAIL.len());
+    html.push_str(MARKETING_HEAD);
+    html.push_str(LOGO_MARK);
+    html.push_str(MARKETING_TAIL);
+    html
 }
 
 async fn health(State(node): State<SharedNode>) -> Json<HealthResponse> {
@@ -141,6 +130,599 @@ async fn health(State(node): State<SharedNode>) -> Json<HealthResponse> {
         tick: guard.tick,
     })
 }
+
+const MARKETING_HEAD: &str = r##"<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Jsonic L1 - Proof of Transaction for Manufacturing</title>
+  <meta name="description" content="Jsonic is a Layer 1 protocol that rewards verified manufacturing, sales, and B2B commerce with PageRank-weighted Proof of Transaction.">
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #141821;
+      --muted: #5f6878;
+      --line: #d9dee7;
+      --paper: #f7f8fb;
+      --white: #ffffff;
+      --blue: #2477b8;
+      --green: #169b6b;
+      --gold: #d99a21;
+      --violet: #6b4ba1;
+      --shadow: 0 18px 50px rgba(22, 30, 46, 0.12);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--ink);
+      background: var(--paper);
+      letter-spacing: 0;
+    }
+
+    a { color: inherit; text-decoration: none; }
+
+    .site-header {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      border-bottom: 1px solid rgba(217, 222, 231, 0.82);
+      background: rgba(255, 255, 255, 0.92);
+      backdrop-filter: blur(14px);
+    }
+
+    .nav {
+      max-width: 1180px;
+      margin: 0 auto;
+      min-height: 72px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 28px;
+      padding: 0 24px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-weight: 800;
+      font-size: 18px;
+    }
+
+    .brand svg {
+      width: 42px;
+      height: 42px;
+      display: block;
+    }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 22px;
+      color: var(--muted);
+      font-size: 14px;
+      font-weight: 650;
+    }
+
+    .nav-links a:hover { color: var(--ink); }
+
+    .button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 42px;
+      padding: 0 18px;
+      border-radius: 7px;
+      border: 1px solid var(--ink);
+      background: var(--ink);
+      color: var(--white);
+      font-weight: 760;
+      font-size: 14px;
+      white-space: nowrap;
+    }
+
+    .button.secondary {
+      background: transparent;
+      color: var(--ink);
+      border-color: var(--line);
+    }
+
+    .hero {
+      position: relative;
+      min-height: calc(100vh - 72px);
+      overflow: hidden;
+      background:
+        linear-gradient(rgba(247, 248, 251, 0.68), rgba(247, 248, 251, 0.9)),
+        url("https://images.unsplash.com/photo-1581093458791-9f3c3900df7b?auto=format&fit=crop&w=2200&q=80") center/cover;
+    }
+
+    .hero-inner {
+      max-width: 1180px;
+      margin: 0 auto;
+      min-height: calc(100vh - 72px);
+      display: grid;
+      grid-template-columns: minmax(0, 1.02fr) minmax(340px, 0.78fr);
+      align-items: center;
+      gap: 56px;
+      padding: 56px 24px 110px;
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      color: var(--green);
+      font-weight: 800;
+      font-size: 13px;
+      text-transform: uppercase;
+    }
+
+    .eyebrow::before {
+      content: "";
+      width: 36px;
+      height: 2px;
+      background: var(--green);
+    }
+
+    h1 {
+      margin: 22px 0 20px;
+      max-width: 820px;
+      font-size: clamp(48px, 7vw, 96px);
+      line-height: 0.96;
+      font-weight: 850;
+    }
+
+    .hero-copy {
+      max-width: 650px;
+      color: #303848;
+      font-size: 20px;
+      line-height: 1.6;
+      margin: 0 0 34px;
+    }
+
+    .hero-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .network-panel {
+      background: rgba(255, 255, 255, 0.88);
+      border: 1px solid rgba(217, 222, 231, 0.9);
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+      padding: 24px;
+    }
+
+    .panel-title {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 22px;
+      font-size: 13px;
+      color: var(--muted);
+      font-weight: 760;
+      text-transform: uppercase;
+    }
+
+    .flow {
+      position: relative;
+      min-height: 320px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background:
+        linear-gradient(90deg, rgba(36, 119, 184, 0.08) 1px, transparent 1px),
+        linear-gradient(rgba(22, 155, 107, 0.08) 1px, transparent 1px),
+        #ffffff;
+      background-size: 42px 42px;
+      overflow: hidden;
+    }
+
+    .flow::before,
+    .flow::after {
+      content: "";
+      position: absolute;
+      left: 14%;
+      right: 14%;
+      height: 2px;
+      background: var(--line);
+      transform-origin: left center;
+    }
+
+    .flow::before { top: 40%; transform: rotate(11deg); }
+    .flow::after { top: 60%; transform: rotate(-13deg); }
+
+    .node {
+      position: absolute;
+      width: 112px;
+      min-height: 78px;
+      padding: 12px;
+      border-radius: 8px;
+      background: #fff;
+      border: 1px solid var(--line);
+      box-shadow: 0 10px 24px rgba(22, 30, 46, 0.1);
+      font-size: 13px;
+      font-weight: 760;
+    }
+
+    .node span {
+      display: block;
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 600;
+      line-height: 1.3;
+    }
+
+    .n1 { top: 28px; left: 28px; border-top: 4px solid var(--gold); }
+    .n2 { top: 126px; right: 34px; border-top: 4px solid var(--blue); }
+    .n3 { bottom: 32px; left: 72px; border-top: 4px solid var(--green); }
+
+    .metric-strip {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-top: 14px;
+    }
+
+    .metric {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fff;
+      padding: 14px;
+    }
+
+    .metric strong {
+      display: block;
+      font-size: 24px;
+    }
+
+    .metric span {
+      display: block;
+      color: var(--muted);
+      font-size: 12px;
+      margin-top: 4px;
+    }
+
+    section {
+      padding: 86px 24px;
+      border-top: 1px solid var(--line);
+      background: var(--white);
+    }
+
+    section.alt { background: #f0f4f8; }
+
+    .section-inner {
+      max-width: 1180px;
+      margin: 0 auto;
+    }
+
+    .section-heading {
+      max-width: 780px;
+      margin-bottom: 38px;
+    }
+
+    h2 {
+      margin: 0 0 14px;
+      font-size: clamp(32px, 4vw, 52px);
+      line-height: 1.05;
+    }
+
+    .section-heading p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 18px;
+      line-height: 1.65;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 18px;
+    }
+
+    .card {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fff;
+      padding: 24px;
+      min-height: 210px;
+    }
+
+    .card .kicker {
+      color: var(--blue);
+      font-size: 13px;
+      font-weight: 820;
+      text-transform: uppercase;
+      margin-bottom: 18px;
+    }
+
+    .card h3 {
+      margin: 0 0 12px;
+      font-size: 22px;
+      line-height: 1.2;
+    }
+
+    .card p {
+      color: var(--muted);
+      margin: 0;
+      line-height: 1.62;
+    }
+
+    .architecture {
+      display: grid;
+      grid-template-columns: 0.9fr 1.1fr;
+      gap: 32px;
+      align-items: start;
+    }
+
+    .steps {
+      display: grid;
+      gap: 12px;
+    }
+
+    .step {
+      display: grid;
+      grid-template-columns: 42px 1fr;
+      gap: 16px;
+      padding: 18px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fff;
+    }
+
+    .step-number {
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      background: var(--ink);
+      color: #fff;
+      display: grid;
+      place-items: center;
+      font-weight: 820;
+    }
+
+    .step h3 {
+      margin: 0 0 6px;
+      font-size: 18px;
+    }
+
+    .step p {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.55;
+    }
+
+    .terminal {
+      border-radius: 8px;
+      overflow: hidden;
+      border: 1px solid #202737;
+      background: #10141d;
+      color: #d7e0ef;
+      box-shadow: var(--shadow);
+    }
+
+    .terminal-head {
+      height: 42px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 0 16px;
+      border-bottom: 1px solid #252d3d;
+      color: #8d99aa;
+      font-size: 13px;
+    }
+
+    .dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--gold);
+    }
+
+    .dot:nth-child(2) { background: var(--green); }
+    .dot:nth-child(3) { background: var(--blue); }
+
+    pre {
+      margin: 0;
+      padding: 22px;
+      overflow-x: auto;
+      font: 14px/1.7 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    }
+
+    .footer {
+      padding: 34px 24px;
+      background: var(--ink);
+      color: #cfd6e2;
+    }
+
+    .footer-inner {
+      max-width: 1180px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      gap: 24px;
+      flex-wrap: wrap;
+      font-size: 14px;
+    }
+
+    @media (max-width: 860px) {
+      .nav { min-height: 64px; }
+      .nav-links { display: none; }
+      .hero-inner {
+        grid-template-columns: 1fr;
+        min-height: auto;
+        padding: 48px 20px 74px;
+      }
+      h1 { font-size: clamp(44px, 15vw, 64px); }
+      .hero-copy { font-size: 18px; }
+      .network-panel { padding: 16px; }
+      .grid,
+      .architecture,
+      .metric-strip {
+        grid-template-columns: 1fr;
+      }
+      section { padding: 64px 20px; }
+      .flow { min-height: 280px; }
+      .node { width: 104px; }
+    }
+  </style>
+</head>
+<body>
+  <header class="site-header">
+    <nav class="nav" aria-label="Main navigation">
+      <a class="brand" href="/" aria-label="Jsonic home">
+"##;
+
+const MARKETING_TAIL: &str = r##"        <span>Jsonic</span>
+      </a>
+      <div class="nav-links">
+        <a href="#protocol">Protocol</a>
+        <a href="#economics">Economics</a>
+        <a href="#node">Node</a>
+        <a class="button secondary" href="/health">Live health</a>
+      </div>
+    </nav>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="hero-inner">
+        <div>
+          <div class="eyebrow">Proof of Transaction Layer 1</div>
+          <h1>Jsonic L1</h1>
+          <p class="hero-copy">
+            A blockchain for manufacturing economies, where tokens are minted
+            from verified production, settlement, and real B2B commerce instead
+            of wasted computation or passive stake.
+          </p>
+          <div class="hero-actions">
+            <a class="button" href="#protocol">Explore the protocol</a>
+            <a class="button secondary" href="/health">Check live node</a>
+          </div>
+        </div>
+
+        <aside class="network-panel" aria-label="Jsonic transaction graph preview">
+          <div class="panel-title">
+            <span>Live manufacturing graph</span>
+            <span>PageRank weighted</span>
+          </div>
+          <div class="flow">
+            <div class="node n1">Manufacturer<span>Produces, invoices, ships</span></div>
+            <div class="node n2">Buyer DAO<span>Signs and settles</span></div>
+            <div class="node n3">Main-chain<span>Solstice minting</span></div>
+          </div>
+          <div class="metric-strip">
+            <div class="metric"><strong>POT</strong><span>dual-party proof</span></div>
+            <div class="metric"><strong>PR</strong><span>recursive trust</span></div>
+            <div class="metric"><strong>L1</strong><span>native settlement</span></div>
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <section id="protocol">
+      <div class="section-inner">
+        <div class="section-heading">
+          <h2>Manufacturing activity becomes consensus weight.</h2>
+          <p>
+            Jsonic records invoices and payments on per-DAO side-chains, matches
+            both parties through Proof of Transaction, then syncs verified
+            activity to a main-chain at Solstice.
+          </p>
+        </div>
+        <div class="grid">
+          <article class="card">
+            <div class="kicker">Identity</div>
+            <h3>DAOs for real businesses</h3>
+            <p>Each manufacturer, supplier, buyer, or retailer operates as a DAO with its own ledger and signing key.</p>
+          </article>
+          <article class="card">
+            <div class="kicker">Consensus</div>
+            <h3>Proof of Transaction</h3>
+            <p>Transactions only count when both counterparties independently record matching signed economic activity.</p>
+          </article>
+          <article class="card">
+            <div class="kicker">Reputation</div>
+            <h3>PageRank for commerce</h3>
+            <p>Rewards depend on who trades with you, who trusts them, and how much real commerce flows through the graph.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="alt" id="economics">
+      <div class="section-inner architecture">
+        <div class="section-heading">
+          <h2>Designed to reward useful work.</h2>
+          <p>
+            Jsonic favors many verified transactions with reputable counterparties.
+            Fake self-dealing rings collapse toward the trust floor, while honest
+            supply chains compound reputation over time.
+          </p>
+        </div>
+        <div class="steps">
+          <div class="step">
+            <div class="step-number">1</div>
+            <div><h3>Register a DAO</h3><p>A business identity joins the network and receives a side-chain.</p></div>
+          </div>
+          <div class="step">
+            <div class="step-number">2</div>
+            <div><h3>Record commerce</h3><p>Invoices and payments are signed, matched, and settled by counterparties.</p></div>
+          </div>
+          <div class="step">
+            <div class="step-number">3</div>
+            <div><h3>Mint at Solstice</h3><p>The main-chain computes trust-weighted relevance and distributes new tokens.</p></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="node">
+      <div class="section-inner architecture">
+        <div>
+          <div class="section-heading">
+            <h2>Live node online.</h2>
+            <p>
+              This domain runs the reference Jsonic RPC node. The protocol is
+              early, but the node is persistent, signed, replay-resistant, and
+              ready for SDK and MCP integrations.
+            </p>
+          </div>
+          <div class="hero-actions">
+            <a class="button" href="/health">Node health</a>
+            <a class="button secondary" href="https://github.com/protosphinx/jsonic">GitHub</a>
+          </div>
+        </div>
+        <div class="terminal" aria-label="Jsonic RPC endpoints">
+          <div class="terminal-head"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span>jsonic-rpc</span></div>
+          <pre>GET  /health
+POST /daos
+POST /transactions
+POST /heartbeats
+GET  /blocks/:height
+GET  /metrics
+GET  /balance/:dao_id
+GET  /reputation/:dao_id</pre>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+      <span>Jsonic L1 - PageRank-weighted Proof of Transaction</span>
+      <span>Manufacturing, settlement, and verified commerce on-chain.</span>
+    </div>
+  </footer>
+</body>
+</html>
+"##;
 
 async fn register_dao(State(node): State<SharedNode>, Json(dao): Json<DAO>) -> impl IntoResponse {
     let id = dao.id.clone();
@@ -315,7 +897,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn index_reports_service_surface() {
+    async fn index_serves_marketing_site() {
         let node = fresh_node();
         let app = build_router(node);
         let resp = app
@@ -323,15 +905,19 @@ mod tests {
             .await
             .unwrap();
         assert_eq!(resp.status(), StatusCode::OK);
-        let v = body_json(resp).await;
-        assert_eq!(v["service"], "Jsonic RPC");
-        assert_eq!(v["status"], "ok");
-        assert!(
-            v["endpoints"]
-                .as_array()
-                .unwrap()
-                .contains(&json!("GET /health"))
-        );
+        let content_type = resp
+            .headers()
+            .get("content-type")
+            .and_then(|value| value.to_str().ok())
+            .unwrap_or_default();
+        assert!(content_type.starts_with("text/html"));
+        let bytes = to_bytes(resp.into_body(), usize::MAX)
+            .await
+            .expect("read body");
+        let html = String::from_utf8(bytes.to_vec()).expect("utf8 html");
+        assert!(html.contains("<h1>Jsonic L1</h1>"));
+        assert!(html.contains("Proof of Transaction Layer 1"));
+        assert!(html.contains("GET  /health"));
     }
 
     #[tokio::test]

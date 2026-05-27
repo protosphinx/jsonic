@@ -3,7 +3,7 @@
 ## Current state
 
 Reference implementation of the Jsonic Layer 1 protocol in Rust: ~3500 lines
-across 9 core modules + an HTTP API + 2 binaries. 67 tests passing in <0.3s.
+across 9 core modules + an HTTP API + 2 binaries. 68 tests passing in <0.3s.
 Persistent full-node state via sled, JSON-RPC server over HTTP, TypeScript SDK,
 and MCP stdio server. Demo and RPC server ship as separate binaries
 (`jsonic-demo`, `jsonic-rpc`).
@@ -31,6 +31,8 @@ and MCP stdio server. Demo and RPC server ship as separate binaries
   `/metrics`, `/balance/:dao_id`, `/reputation/:dao_id`. Restores full node
   state from sled on startup, persists it on graceful shutdown. Integration
   tests drive the full lifecycle through the HTTP surface.
+- **Marketing homepage.** The root route now serves a public Jsonic L1 landing
+  page while the protocol API stays available on explicit RPC endpoints.
 - **SDK and MCP surface.** Added `@protosphinx/jsonic-sdk`, a TypeScript
   JSON-RPC client, and `@protosphinx/jsonic-mcp`, an MCP stdio server exposing
   health, heartbeat, block, metrics, balance, and reputation tools.

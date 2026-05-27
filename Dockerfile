@@ -5,6 +5,7 @@ FROM rust:1-slim-bookworm AS builder
 WORKDIR /app
 COPY Cargo.toml Cargo.lock ./
 COPY src ./src
+COPY assets ./assets
 RUN cargo build --release --bin jsonic-rpc
 
 FROM debian:bookworm-slim
