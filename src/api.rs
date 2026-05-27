@@ -6,6 +6,7 @@
 //!
 //! Routes:
 //!   GET  /                        marketing site
+//!   GET  /assets/marketing/jsonic-hero-commons.png
 //!   GET  /health                  liveness probe
 //!   POST /daos                    register a DAO (body: DAO JSON)
 //!   POST /transactions            submit a signed transaction (body: Transaction JSON)
@@ -40,6 +41,10 @@ pub type SharedNode = Arc<RwLock<JsonicNode>>;
 pub fn build_router(node: SharedNode) -> Router {
     Router::new()
         .route("/", get(index))
+        .route(
+            "/assets/marketing/jsonic-hero-commons.png",
+            get(hero_commons_asset),
+        )
         .route("/health", get(health))
         .route("/daos", post(register_dao))
         .route("/transactions", post(submit_transaction))
@@ -107,9 +112,21 @@ struct ErrorResponse {
 // ---------------------------------------------------------------------------
 
 const LOGO_MARK: &str = include_str!("../assets/brand/logo-jsconic-mark-color.svg");
+const HERO_COMMONS_IMAGE: &[u8] = include_bytes!("../assets/marketing/jsonic-hero-commons.png");
 
 async fn index() -> Html<String> {
     Html(marketing_page())
+}
+
+async fn hero_commons_asset() -> impl IntoResponse {
+    (
+        [
+            ("content-type", "image/png"),
+            ("cache-control", "public, max-age=31536000, immutable"),
+        ],
+        HERO_COMMONS_IMAGE,
+    )
+        .into_response()
 }
 
 fn marketing_page() -> String {
@@ -613,6 +630,459 @@ const MARKETING_HEAD: &str = r##"<!doctype html>
         gap: 4px;
       }
     }
+
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+
+    html,
+    body {
+      max-width: 100%;
+      overflow-x: hidden;
+    }
+
+    body {
+      background: #fff;
+      color: #111;
+      font-family: "Aptos", "Segoe UI", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+
+    .site-header {
+      position: relative;
+      border-top: 1px solid #222;
+      border-bottom: 1px solid #d7d7d7;
+      background: #fff;
+      backdrop-filter: none;
+    }
+
+    .nav {
+      max-width: 1800px;
+      min-height: 88px;
+      padding: 0 36px;
+      gap: 32px;
+    }
+
+    .brand {
+      width: 42px;
+      min-width: 42px;
+      gap: 0;
+    }
+
+    .brand svg {
+      width: 34px;
+      height: 34px;
+    }
+
+    .nav-links {
+      flex: 1;
+      gap: 40px;
+      color: #111;
+      font-size: 22px;
+      font-weight: 500;
+    }
+
+    .nav-actions {
+      display: flex;
+      align-items: center;
+      gap: 28px;
+      color: #111;
+      font-size: 20px;
+      font-weight: 520;
+    }
+
+    .search-pill {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 205px;
+      min-height: 54px;
+      padding: 0 16px;
+      border: 1px solid #8d8d8d;
+      border-radius: 4px;
+      color: #111;
+      background: #fff;
+    }
+
+    .search-pill .key {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 28px;
+      height: 28px;
+      border: 1px solid #a7a7a7;
+      border-radius: 4px;
+      color: #777;
+      font-size: 15px;
+      line-height: 1;
+    }
+
+    .nav-icon {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      white-space: nowrap;
+    }
+
+    .hero {
+      min-height: auto;
+      border-top: 0;
+      background: #fff;
+      overflow: visible;
+    }
+
+    .hero-art {
+      max-width: 1888px;
+      margin: 0 auto;
+      padding: 0 28px;
+      background: #fff;
+    }
+
+    .hero-art img {
+      display: block;
+      width: 100%;
+      height: 590px;
+      object-fit: cover;
+      object-position: center;
+      border: 0;
+    }
+
+    .hero-copy-block {
+      max-width: 960px;
+      margin: 88px auto 30px;
+      padding: 0 24px;
+      text-align: center;
+    }
+
+    .eyebrow {
+      display: block;
+      color: #5f2eea;
+      font-size: 18px;
+      font-weight: 760;
+      line-height: 1.2;
+      text-transform: uppercase;
+    }
+
+    .eyebrow::before { content: none; }
+
+    h1 {
+      max-width: 860px;
+      margin: 34px auto 28px;
+      font-family: "Aptos", "Segoe UI", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+      font-size: 76px;
+      line-height: 0.98;
+      font-weight: 860;
+      letter-spacing: 0;
+    }
+
+    .hero-copy {
+      max-width: 830px;
+      margin: 0 auto 34px;
+      color: #5d5d5d;
+      font-size: 29px;
+      line-height: 1.45;
+    }
+
+    .hero-actions {
+      justify-content: center;
+      gap: 14px;
+    }
+
+    .button {
+      min-height: 48px;
+      padding: 0 24px;
+      border-radius: 999px;
+      border-color: #111;
+      background: #111;
+      color: #fff;
+      font-size: 16px;
+      font-weight: 760;
+    }
+
+    .button.secondary {
+      background: #fff;
+      color: #111;
+      border-color: #bcbcbc;
+    }
+
+    section {
+      padding: 96px 44px;
+      border-top: 0;
+      background: #fff;
+    }
+
+    .section-inner {
+      max-width: 1800px;
+    }
+
+    .editorial {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 470px;
+      gap: 88px;
+      align-items: start;
+      min-height: 560px;
+    }
+
+    .editorial-copy {
+      max-width: 840px;
+    }
+
+    h2 {
+      margin: 26px 0 46px;
+      font-family: "Aptos", "Segoe UI", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+      font-size: 72px;
+      line-height: 1.06;
+      font-weight: 860;
+      letter-spacing: 0;
+    }
+
+    .editorial-copy p,
+    .split-copy p {
+      margin: 0;
+      color: #616161;
+      font-size: 30px;
+      line-height: 1.55;
+    }
+
+    .stats {
+      display: grid;
+      gap: 44px;
+      border-left: 1px solid #d3d3d3;
+      padding: 60px 0 0 90px;
+    }
+
+    .stat {
+      display: grid;
+      grid-template-columns: 40px 1fr;
+      gap: 20px;
+      align-items: start;
+    }
+
+    .stat-icon {
+      color: #6c6c6c;
+      font-size: 32px;
+      line-height: 1;
+    }
+
+    .stat strong {
+      display: block;
+      color: #111;
+      font-size: 46px;
+      line-height: 1;
+      font-weight: 840;
+    }
+
+    .stat span:last-child {
+      display: block;
+      margin-top: 12px;
+      color: #606060;
+      font-size: 20px;
+    }
+
+    .split {
+      display: grid;
+      grid-template-columns: minmax(0, 0.95fr) minmax(420px, 1fr);
+      gap: 72px;
+      align-items: center;
+    }
+
+    .split-copy {
+      max-width: 780px;
+    }
+
+    .split-image {
+      align-self: end;
+      overflow: hidden;
+      border-radius: 48px 48px 0 0;
+      border: 1px solid #d9d9f2;
+      background: #eff7ff;
+    }
+
+    .split-image img {
+      display: block;
+      width: 100%;
+      height: 420px;
+      object-fit: cover;
+      object-position: center;
+    }
+
+    .path-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 18px;
+      margin-top: 36px;
+    }
+
+    .path-card {
+      min-height: 260px;
+      padding: 28px;
+      border: 1px solid #d8d8d8;
+      border-radius: 6px;
+      background: #fff;
+    }
+
+    .path-card h3 {
+      margin: 0 0 16px;
+      font-size: 28px;
+      line-height: 1.15;
+    }
+
+    .path-card p {
+      margin: 0;
+      color: #5f5f5f;
+      font-size: 18px;
+      line-height: 1.55;
+    }
+
+    .node-section {
+      background: #f7f7fb;
+    }
+
+    .node-panel {
+      display: grid;
+      grid-template-columns: minmax(0, 0.9fr) minmax(430px, 1fr);
+      gap: 52px;
+      align-items: center;
+    }
+
+    .terminal {
+      border-radius: 8px;
+      border: 1px solid #1f1f1f;
+      background: #111;
+      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.16);
+    }
+
+    .footer {
+      background: #111;
+    }
+
+    @media (max-width: 1100px) {
+      .nav {
+        min-height: 78px;
+      }
+
+      .nav-links {
+        gap: 22px;
+        font-size: 18px;
+      }
+
+      .nav-actions {
+        display: none;
+      }
+
+      .hero-art img {
+        height: 420px;
+      }
+
+      h1 {
+        font-size: 58px;
+      }
+
+      h2 {
+        font-size: 54px;
+      }
+
+      .hero-copy,
+      .editorial-copy p,
+      .split-copy p {
+        font-size: 23px;
+      }
+
+      .editorial,
+      .split,
+      .node-panel {
+        grid-template-columns: 1fr;
+      }
+
+      .stats {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        border-left: 0;
+        border-top: 1px solid #d3d3d3;
+        padding: 38px 0 0;
+      }
+
+      .path-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 720px) {
+      .nav {
+        padding: 0 20px;
+      }
+
+      .nav-links {
+        display: none;
+      }
+
+      .hero-art {
+        padding: 0;
+      }
+
+      .hero-art img {
+        height: 270px;
+      }
+
+      .hero-copy-block {
+        max-width: 390px;
+        margin: 54px 0 30px;
+        padding: 0 20px;
+      }
+
+      h1 {
+        max-width: 350px;
+        font-size: 38px;
+      }
+
+      h2 {
+        font-size: 42px;
+      }
+
+      .hero-copy,
+      .editorial-copy p,
+      .split-copy p {
+        max-width: 350px;
+        font-size: 20px;
+      }
+
+      .hero-actions {
+        max-width: 350px;
+        margin: 0;
+      }
+
+      section {
+        padding: 72px 20px;
+      }
+
+      .editorial {
+        min-height: auto;
+        gap: 48px;
+      }
+
+      .stats,
+      .path-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .split {
+        gap: 40px;
+      }
+
+      .split-image img {
+        height: 280px;
+      }
+
+      .node-panel {
+        gap: 32px;
+      }
+    }
   </style>
 </head>
 <body>
@@ -621,204 +1091,138 @@ const MARKETING_HEAD: &str = r##"<!doctype html>
       <a class="brand" href="/" aria-label="Jsonic home">
 "##;
 
-const MARKETING_TAIL: &str = r##"        <span>Jsonic</span>
+const MARKETING_TAIL: &str = r##"        <span class="sr-only">Jsonic</span>
       </a>
       <div class="nav-links">
         <a href="#learn">Learn</a>
         <a href="#use">Use</a>
         <a href="#build">Build</a>
-        <a href="#node">Node</a>
-        <a class="button secondary" href="/health">Live health</a>
+        <a href="#participate">Participate</a>
+        <a href="#research">Research</a>
+      </div>
+      <div class="nav-actions" aria-label="Site tools">
+        <a class="search-pill" href="https://github.com/protosphinx/jsonic" aria-label="Search Jsonic on GitHub">
+          <span>search</span>
+          <span class="key">cmd</span>
+          <span class="key">k</span>
+        </a>
+        <a class="nav-icon" href="/health">Node</a>
+        <span class="nav-icon">Languages EN</span>
       </div>
     </nav>
   </header>
 
   <main>
-    <section class="hero">
-      <div class="hero-inner">
-        <div>
-          <div class="eyebrow">Jsonic L1</div>
-          <h1>Welcome to Jsonic</h1>
-          <p class="hero-copy">
-            Jsonic is an open Layer 1 blockchain for verified production,
-            settlement, and B2B trade. It rewards real commercial work using
-            Proof of Transaction and PageRank-weighted reputation.
-          </p>
-          <div class="hero-actions">
-            <a class="button" href="#learn">Start here</a>
-            <a class="button secondary" href="/health">Check live node</a>
-          </div>
+    <section class="hero" aria-labelledby="hero-heading">
+      <div class="hero-art">
+        <img src="/assets/marketing/jsonic-hero-commons.png" alt="Illustrated Jsonic manufacturing commons with makers, buyers, ledgers, and robotics.">
+      </div>
+      <div class="hero-copy-block">
+        <div class="eyebrow">Jsonic L1</div>
+        <h1 id="hero-heading">The manufacturing network that belongs to its makers</h1>
+        <p class="hero-copy">
+          Jsonic is a Layer 1 blockchain where production, invoices, settlement,
+          and counterparty reputation become public economic infrastructure.
+        </p>
+        <div class="hero-actions">
+          <a class="button" href="#learn">Start learning</a>
+          <a class="button secondary" href="/health">Check the live node</a>
         </div>
-
-        <aside class="network-panel" aria-label="Jsonic transaction graph preview">
-          <div class="panel-title">
-            <span>Live manufacturing graph</span>
-            <span>PageRank weighted</span>
-          </div>
-          <div class="flow">
-            <div class="node n1">Manufacturer<span>Produces, invoices, ships</span></div>
-            <div class="node n2">Buyer DAO<span>Signs and settles</span></div>
-            <div class="node n3">Main-chain<span>Solstice minting</span></div>
-          </div>
-          <div class="metric-strip">
-            <div class="metric"><strong>68</strong><span>core tests passing</span></div>
-            <div class="metric"><strong>POT</strong><span>dual-party proof</span></div>
-            <div class="metric"><strong>L1</strong><span>native settlement</span></div>
-          </div>
-        </aside>
       </div>
     </section>
 
     <section id="learn">
-      <div class="section-inner">
-        <div class="section-heading">
-          <h2>What is Jsonic?</h2>
+      <div class="section-inner editorial">
+        <div class="editorial-copy">
+          <div class="eyebrow">The production-owned ledger</div>
+          <h2>Jsonic gives verified commerce a native chain</h2>
           <p>
-            Jsonic turns verified invoices, payments, and supply-chain activity
-            into a public transaction graph. Reputation flows through the graph,
-            and token minting follows the businesses that create credible value.
+            A bank record says money moved. An ERP record says goods moved.
+            Jsonic connects both sides on-chain, so manufacturers and buyers can
+            prove useful economic work without trusting a private database.
           </p>
         </div>
-        <div class="grid">
-          <article class="card">
-            <div class="kicker">Start here</div>
-            <h3>Understand the network</h3>
-            <p>Learn why a manufacturing L1 needs signed trade, side-chains, and reputation-weighted settlement.</p>
-          </article>
-          <article class="card">
-            <div class="kicker">Run it</div>
-            <h3>Operate a node</h3>
-            <p>The live RPC node is online today, with persistent state, signed transaction admission, and replay protection.</p>
-          </article>
-          <article class="card">
-            <div class="kicker">Build</div>
-            <h3>Use the SDKs</h3>
-            <p>Connect ERP systems, payment rails, and agents through the TypeScript SDK or the Jsonic MCP server.</p>
-          </article>
-        </div>
-      </div>
-    </section>
-
-    <section class="alt" id="difference">
-      <div class="section-inner">
-        <div class="section-heading">
-          <h2>What makes Jsonic different</h2>
-          <p>Traditional chains reward computation or capital. Jsonic rewards verifiable economic activity.</p>
-        </div>
-        <div class="grid">
-          <article class="card">
-            <div class="kicker">Proof</div>
-            <h3>Transactions need two parties</h3>
-            <p>An invoice only matters when the counterparty independently records and settles matching signed activity.</p>
-          </article>
-          <article class="card">
-            <div class="kicker">Trust</div>
-            <h3>Reputation is recursive</h3>
-            <p>A buyer's reputation depends on who trusts them, and that trust propagates across the whole commerce graph.</p>
-          </article>
-          <article class="card">
-            <div class="kicker">Resistance</div>
-            <h3>Fake volume falls to the floor</h3>
-            <p>Sybil rings can create many accounts, but without earned trust their transactions contribute near-zero reward.</p>
-          </article>
-        </div>
+        <aside class="stats" aria-label="Jsonic network facts">
+          <div class="stat"><span class="stat-icon">[]</span><div><strong>69</strong><span>core tests passing</span></div></div>
+          <div class="stat"><span class="stat-icon">POT</span><div><strong>2-party</strong><span>transaction proof</span></div></div>
+          <div class="stat"><span class="stat-icon">L1</span><div><strong>live</strong><span>reference RPC node</span></div></div>
+        </aside>
       </div>
     </section>
 
     <section id="use">
-      <div class="section-inner">
-        <div class="section-heading">
-          <h2>Use Jsonic for real commerce</h2>
+      <div class="section-inner split">
+        <div class="split-copy">
+          <div class="eyebrow">Your business is yours</div>
+          <h2>Use commerce without making fake volume valuable</h2>
           <p>
-            Manufacturers, suppliers, retailers, and buyers can record the
-            economic facts that already matter: production, invoicing,
-            settlement, and counterparty trust.
+            Jsonic rewards signed activity between real counterparties. Reputation
+            flows through the transaction graph, so trusted buyers, suppliers,
+            and retailers make each other more credible over time.
           </p>
         </div>
-        <div class="grid">
-          <article class="card">
-            <div class="kicker">Manufacturers</div>
-            <h3>Tokenize production</h3>
-            <p>Log goods, issue invoices, settle sales, and build reputation from verified commercial output.</p>
-          </article>
-          <article class="card">
-            <div class="kicker">Buyers</div>
-            <h3>Make trust portable</h3>
-            <p>Every settled payment strengthens a public reputation graph that suppliers can inspect and price against.</p>
-          </article>
-          <article class="card">
-            <div class="kicker">Operators</div>
-            <h3>Run the ledger</h3>
-            <p>Nodes process signed transactions, heartbeat ticks, side-chain snapshots, and Solstice minting.</p>
-          </article>
-        </div>
-      </div>
-    </section>
-
-    <section class="alt" id="protocol">
-      <div class="section-inner architecture">
-        <div class="section-heading">
-          <h2>Designed to reward useful work</h2>
-          <p>
-            Jsonic favors many verified transactions with reputable counterparties.
-            Fake self-dealing rings collapse toward the trust floor, while honest
-            supply chains compound reputation over time.
-          </p>
-        </div>
-        <div class="steps">
-          <div class="step">
-            <div class="step-number">1</div>
-            <div><h3>Register a DAO</h3><p>A business identity joins the network and receives a side-chain.</p></div>
-          </div>
-          <div class="step">
-            <div class="step-number">2</div>
-            <div><h3>Record commerce</h3><p>Invoices and payments are signed, matched, and settled by counterparties.</p></div>
-          </div>
-          <div class="step">
-            <div class="step-number">3</div>
-            <div><h3>Mint at Solstice</h3><p>The main-chain computes trust-weighted relevance and distributes new tokens.</p></div>
-          </div>
+        <div class="split-image">
+          <img src="/assets/marketing/jsonic-hero-commons.png" alt="Jsonic manufacturing network illustration crop.">
         </div>
       </div>
     </section>
 
     <section id="build">
       <div class="section-inner">
-        <div class="section-heading">
-          <h2>Get started on Jsonic</h2>
-          <p>Choose the path that fits you: learn the protocol, integrate the API, or operate infrastructure.</p>
+        <div class="editorial-copy">
+          <div class="eyebrow">Build on real work</div>
+          <h2>Choose your path into Jsonic</h2>
         </div>
-        <div class="grid">
-          <article class="card">
-            <div class="kicker">Learn</div>
-            <h3>Read the whitepaper</h3>
-            <p>Understand DAOs, side-chains, Proof of Transaction, PageRank reputation, and Solstice distribution.</p>
+        <div class="path-grid">
+          <article class="path-card">
+            <h3>Learn the protocol</h3>
+            <p>Understand DAOs, side-chains, Proof of Transaction, PageRank reputation, and Solstice minting.</p>
           </article>
-          <article class="card">
-            <div class="kicker">Developers</div>
-            <h3>Build with JSON-RPC</h3>
-            <p>Submit DAOs and transactions, advance heartbeats, inspect balances, and query reputation scores.</p>
+          <article class="path-card">
+            <h3>Use the network</h3>
+            <p>Register business identities, submit signed invoices and payments, and inspect balances.</p>
           </article>
-          <article class="card">
-            <div class="kicker">Agents</div>
-            <h3>Connect through MCP</h3>
-            <p>Use the Jsonic MCP server to let AI agents inspect live chain health, metrics, blocks, and DAO state.</p>
+          <article class="path-card">
+            <h3>Build apps</h3>
+            <p>Connect ERP systems, payment workflows, agents, and explorers through the JSON-RPC API.</p>
+          </article>
+          <article class="path-card">
+            <h3>Run a node</h3>
+            <p>Operate the reference server with persistent state, replay protection, and live health checks.</p>
           </article>
         </div>
       </div>
     </section>
 
-    <section class="alt" id="node">
-      <div class="section-inner architecture">
-        <div>
-          <div class="section-heading">
-            <h2>Live node online.</h2>
-            <p>
-              This domain runs the reference Jsonic RPC node. The protocol is
-              early, but the node is persistent, signed, replay-resistant, and
-              ready for SDK and MCP integrations.
-            </p>
-          </div>
+    <section id="participate">
+      <div class="section-inner editorial">
+        <div class="editorial-copy">
+          <div class="eyebrow">Participate</div>
+          <h2>Every honest counterparty strengthens the graph</h2>
+          <p>
+            The network gets better when real buyers confirm real production.
+            Honest supply chains compound reputation; isolated self-dealing
+            rings drift toward the trust floor.
+          </p>
+        </div>
+        <aside class="stats" aria-label="Jsonic participation model">
+          <div class="stat"><span class="stat-icon">01</span><div><strong>register</strong><span>a business DAO</span></div></div>
+          <div class="stat"><span class="stat-icon">02</span><div><strong>record</strong><span>signed commerce</span></div></div>
+          <div class="stat"><span class="stat-icon">03</span><div><strong>settle</strong><span>at Solstice</span></div></div>
+        </aside>
+      </div>
+    </section>
+
+    <section class="node-section" id="research">
+      <div class="section-inner node-panel">
+        <div class="split-copy">
+          <div class="eyebrow">Research and node</div>
+          <h2>Proof of Transaction is running now</h2>
+          <p>
+            Jsonic is early, but the core engine is real: signed transaction
+            admission, sequence replay protection, PageRank scoring, side-chain
+            snapshots, persistent storage, TypeScript SDKs, and MCP tools.
+          </p>
           <div class="hero-actions">
             <a class="button" href="/health">Node health</a>
             <a class="button secondary" href="https://github.com/protosphinx/jsonic">GitHub</a>
@@ -841,8 +1245,8 @@ GET  /reputation/:dao_id</pre>
 
   <footer class="footer">
     <div class="footer-inner">
-      <span>Jsonic L1 - PageRank-weighted Proof of Transaction</span>
-      <span>Manufacturing, settlement, and verified commerce on-chain.</span>
+      <span>Jsonic L1 - Proof of Transaction for manufacturing economies</span>
+      <span>Production, settlement, and reputation on-chain.</span>
     </div>
   </footer>
 </body>
@@ -1040,10 +1444,37 @@ mod tests {
             .await
             .expect("read body");
         let html = String::from_utf8(bytes.to_vec()).expect("utf8 html");
-        assert!(html.contains("<h1>Welcome to Jsonic</h1>"));
-        assert!(html.contains("What is Jsonic?"));
+        assert!(html.contains("The manufacturing network that belongs to its makers"));
+        assert!(html.contains("Jsonic gives verified commerce a native chain"));
         assert!(html.contains("Proof of Transaction"));
+        assert!(html.contains("/assets/marketing/jsonic-hero-commons.png"));
         assert!(html.contains("GET  /health"));
+    }
+
+    #[tokio::test]
+    async fn marketing_image_serves_png() {
+        let node = fresh_node();
+        let app = build_router(node);
+        let resp = app
+            .oneshot(
+                Request::builder()
+                    .uri("/assets/marketing/jsonic-hero-commons.png")
+                    .body(Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(resp.status(), StatusCode::OK);
+        let content_type = resp
+            .headers()
+            .get("content-type")
+            .and_then(|value| value.to_str().ok())
+            .unwrap_or_default();
+        assert_eq!(content_type, "image/png");
+        let bytes = to_bytes(resp.into_body(), usize::MAX)
+            .await
+            .expect("read png body");
+        assert!(bytes.starts_with(b"\x89PNG"));
     }
 
     #[tokio::test]

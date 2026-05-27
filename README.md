@@ -16,7 +16,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/tests-68%20passing-yellowgreen" alt="Tests">
+  <img src="https://img.shields.io/badge/tests-69%20passing-yellowgreen" alt="Tests">
   <a href="https://github.com/protosphinx/jsonic/blob/main/LICENSE">
     <img src="https://img.shields.io/badge/license-CC--BY--SA--4.0-blue" alt="License">
   </a>
@@ -129,8 +129,8 @@ cargo run --bin jsonic-demo
 cargo run --bin jsonic-rpc
 # then: curl http://127.0.0.1:8080/health
 
-# Run tests (68 tests: crypto, POT, PageRank, side-chain, main-chain,
-# end-to-end Sybil resistance, persistence round-trips, RPC integration)
+# Run tests (69 tests: crypto, POT, PageRank, side-chain, main-chain,
+# end-to-end Sybil resistance, persistence round-trips, RPC integration, assets)
 cargo test
 ```
 
