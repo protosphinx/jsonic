@@ -157,7 +157,7 @@ const MARKETING_HEAD: &str = r##"<!doctype html>
 
     body {
       margin: 0;
-      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      font-family: "Aptos", "Segoe UI", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
       color: var(--ink);
       background: var(--paper);
       letter-spacing: 0;
@@ -233,7 +233,9 @@ const MARKETING_HEAD: &str = r##"<!doctype html>
 
     .hero {
       position: relative;
-      min-height: calc(100vh - 72px);
+      min-height: calc(90vh - 72px);
+      padding: 0;
+      border-top: 0;
       overflow: hidden;
       background:
         linear-gradient(rgba(247, 248, 251, 0.68), rgba(247, 248, 251, 0.9)),
@@ -243,7 +245,7 @@ const MARKETING_HEAD: &str = r##"<!doctype html>
     .hero-inner {
       max-width: 1180px;
       margin: 0 auto;
-      min-height: calc(100vh - 72px);
+      min-height: calc(90vh - 72px);
       display: grid;
       grid-template-columns: minmax(0, 1.02fr) minmax(340px, 0.78fr);
       align-items: center;
@@ -271,9 +273,10 @@ const MARKETING_HEAD: &str = r##"<!doctype html>
     h1 {
       margin: 22px 0 20px;
       max-width: 820px;
-      font-size: clamp(48px, 7vw, 96px);
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: 88px;
       line-height: 0.96;
-      font-weight: 850;
+      font-weight: 700;
     }
 
     .hero-copy {
@@ -409,8 +412,10 @@ const MARKETING_HEAD: &str = r##"<!doctype html>
 
     h2 {
       margin: 0 0 14px;
-      font-size: clamp(32px, 4vw, 52px);
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: 50px;
       line-height: 1.05;
+      font-weight: 700;
     }
 
     .section-heading p {
@@ -559,7 +564,8 @@ const MARKETING_HEAD: &str = r##"<!doctype html>
         min-height: auto;
         padding: 48px 20px 74px;
       }
-      h1 { font-size: clamp(44px, 15vw, 64px); }
+      h1 { font-size: 54px; }
+      h2 { font-size: 38px; }
       .hero-copy { font-size: 18px; }
       .network-panel { padding: 16px; }
       .grid,
@@ -570,6 +576,42 @@ const MARKETING_HEAD: &str = r##"<!doctype html>
       section { padding: 64px 20px; }
       .flow { min-height: 280px; }
       .node { width: 104px; }
+    }
+
+    @media (max-width: 520px) {
+      .hero-inner {
+        max-width: 390px;
+        margin: 0;
+      }
+      h1 {
+        max-width: 310px;
+        font-size: 40px;
+      }
+      h2 { font-size: 32px; }
+      .hero-copy {
+        max-width: 350px;
+        font-size: 17px;
+      }
+      .button { width: 100%; }
+      .hero-actions { align-items: stretch; }
+      .network-panel {
+        width: 100%;
+        max-width: 350px;
+        overflow: hidden;
+      }
+      .flow { min-height: 238px; }
+      .n1 { top: 28px; left: 28px; }
+      .n2 { top: 96px; right: 16px; }
+      .n3 { bottom: 20px; left: 48px; }
+      .metric-strip {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+      .metric { padding: 10px; }
+      .metric strong { font-size: 20px; }
+      .panel-title {
+        flex-direction: column;
+        gap: 4px;
+      }
     }
   </style>
 </head>
@@ -582,8 +624,9 @@ const MARKETING_HEAD: &str = r##"<!doctype html>
 const MARKETING_TAIL: &str = r##"        <span>Jsonic</span>
       </a>
       <div class="nav-links">
-        <a href="#protocol">Protocol</a>
-        <a href="#economics">Economics</a>
+        <a href="#learn">Learn</a>
+        <a href="#use">Use</a>
+        <a href="#build">Build</a>
         <a href="#node">Node</a>
         <a class="button secondary" href="/health">Live health</a>
       </div>
@@ -594,15 +637,15 @@ const MARKETING_TAIL: &str = r##"        <span>Jsonic</span>
     <section class="hero">
       <div class="hero-inner">
         <div>
-          <div class="eyebrow">Proof of Transaction Layer 1</div>
-          <h1>Jsonic L1</h1>
+          <div class="eyebrow">Jsonic L1</div>
+          <h1>Welcome to Jsonic</h1>
           <p class="hero-copy">
-            A blockchain for manufacturing economies, where tokens are minted
-            from verified production, settlement, and real B2B commerce instead
-            of wasted computation or passive stake.
+            Jsonic is an open Layer 1 blockchain for verified production,
+            settlement, and B2B trade. It rewards real commercial work using
+            Proof of Transaction and PageRank-weighted reputation.
           </p>
           <div class="hero-actions">
-            <a class="button" href="#protocol">Explore the protocol</a>
+            <a class="button" href="#learn">Start here</a>
             <a class="button secondary" href="/health">Check live node</a>
           </div>
         </div>
@@ -618,48 +661,104 @@ const MARKETING_TAIL: &str = r##"        <span>Jsonic</span>
             <div class="node n3">Main-chain<span>Solstice minting</span></div>
           </div>
           <div class="metric-strip">
+            <div class="metric"><strong>68</strong><span>core tests passing</span></div>
             <div class="metric"><strong>POT</strong><span>dual-party proof</span></div>
-            <div class="metric"><strong>PR</strong><span>recursive trust</span></div>
             <div class="metric"><strong>L1</strong><span>native settlement</span></div>
           </div>
         </aside>
       </div>
     </section>
 
-    <section id="protocol">
+    <section id="learn">
       <div class="section-inner">
         <div class="section-heading">
-          <h2>Manufacturing activity becomes consensus weight.</h2>
+          <h2>What is Jsonic?</h2>
           <p>
-            Jsonic records invoices and payments on per-DAO side-chains, matches
-            both parties through Proof of Transaction, then syncs verified
-            activity to a main-chain at Solstice.
+            Jsonic turns verified invoices, payments, and supply-chain activity
+            into a public transaction graph. Reputation flows through the graph,
+            and token minting follows the businesses that create credible value.
           </p>
         </div>
         <div class="grid">
           <article class="card">
-            <div class="kicker">Identity</div>
-            <h3>DAOs for real businesses</h3>
-            <p>Each manufacturer, supplier, buyer, or retailer operates as a DAO with its own ledger and signing key.</p>
+            <div class="kicker">Start here</div>
+            <h3>Understand the network</h3>
+            <p>Learn why a manufacturing L1 needs signed trade, side-chains, and reputation-weighted settlement.</p>
           </article>
           <article class="card">
-            <div class="kicker">Consensus</div>
-            <h3>Proof of Transaction</h3>
-            <p>Transactions only count when both counterparties independently record matching signed economic activity.</p>
+            <div class="kicker">Run it</div>
+            <h3>Operate a node</h3>
+            <p>The live RPC node is online today, with persistent state, signed transaction admission, and replay protection.</p>
           </article>
           <article class="card">
-            <div class="kicker">Reputation</div>
-            <h3>PageRank for commerce</h3>
-            <p>Rewards depend on who trades with you, who trusts them, and how much real commerce flows through the graph.</p>
+            <div class="kicker">Build</div>
+            <h3>Use the SDKs</h3>
+            <p>Connect ERP systems, payment rails, and agents through the TypeScript SDK or the Jsonic MCP server.</p>
           </article>
         </div>
       </div>
     </section>
 
-    <section class="alt" id="economics">
+    <section class="alt" id="difference">
+      <div class="section-inner">
+        <div class="section-heading">
+          <h2>What makes Jsonic different</h2>
+          <p>Traditional chains reward computation or capital. Jsonic rewards verifiable economic activity.</p>
+        </div>
+        <div class="grid">
+          <article class="card">
+            <div class="kicker">Proof</div>
+            <h3>Transactions need two parties</h3>
+            <p>An invoice only matters when the counterparty independently records and settles matching signed activity.</p>
+          </article>
+          <article class="card">
+            <div class="kicker">Trust</div>
+            <h3>Reputation is recursive</h3>
+            <p>A buyer's reputation depends on who trusts them, and that trust propagates across the whole commerce graph.</p>
+          </article>
+          <article class="card">
+            <div class="kicker">Resistance</div>
+            <h3>Fake volume falls to the floor</h3>
+            <p>Sybil rings can create many accounts, but without earned trust their transactions contribute near-zero reward.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section id="use">
+      <div class="section-inner">
+        <div class="section-heading">
+          <h2>Use Jsonic for real commerce</h2>
+          <p>
+            Manufacturers, suppliers, retailers, and buyers can record the
+            economic facts that already matter: production, invoicing,
+            settlement, and counterparty trust.
+          </p>
+        </div>
+        <div class="grid">
+          <article class="card">
+            <div class="kicker">Manufacturers</div>
+            <h3>Tokenize production</h3>
+            <p>Log goods, issue invoices, settle sales, and build reputation from verified commercial output.</p>
+          </article>
+          <article class="card">
+            <div class="kicker">Buyers</div>
+            <h3>Make trust portable</h3>
+            <p>Every settled payment strengthens a public reputation graph that suppliers can inspect and price against.</p>
+          </article>
+          <article class="card">
+            <div class="kicker">Operators</div>
+            <h3>Run the ledger</h3>
+            <p>Nodes process signed transactions, heartbeat ticks, side-chain snapshots, and Solstice minting.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="alt" id="protocol">
       <div class="section-inner architecture">
         <div class="section-heading">
-          <h2>Designed to reward useful work.</h2>
+          <h2>Designed to reward useful work</h2>
           <p>
             Jsonic favors many verified transactions with reputable counterparties.
             Fake self-dealing rings collapse toward the trust floor, while honest
@@ -683,7 +782,33 @@ const MARKETING_TAIL: &str = r##"        <span>Jsonic</span>
       </div>
     </section>
 
-    <section id="node">
+    <section id="build">
+      <div class="section-inner">
+        <div class="section-heading">
+          <h2>Get started on Jsonic</h2>
+          <p>Choose the path that fits you: learn the protocol, integrate the API, or operate infrastructure.</p>
+        </div>
+        <div class="grid">
+          <article class="card">
+            <div class="kicker">Learn</div>
+            <h3>Read the whitepaper</h3>
+            <p>Understand DAOs, side-chains, Proof of Transaction, PageRank reputation, and Solstice distribution.</p>
+          </article>
+          <article class="card">
+            <div class="kicker">Developers</div>
+            <h3>Build with JSON-RPC</h3>
+            <p>Submit DAOs and transactions, advance heartbeats, inspect balances, and query reputation scores.</p>
+          </article>
+          <article class="card">
+            <div class="kicker">Agents</div>
+            <h3>Connect through MCP</h3>
+            <p>Use the Jsonic MCP server to let AI agents inspect live chain health, metrics, blocks, and DAO state.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="alt" id="node">
       <div class="section-inner architecture">
         <div>
           <div class="section-heading">
@@ -915,8 +1040,9 @@ mod tests {
             .await
             .expect("read body");
         let html = String::from_utf8(bytes.to_vec()).expect("utf8 html");
-        assert!(html.contains("<h1>Jsonic L1</h1>"));
-        assert!(html.contains("Proof of Transaction Layer 1"));
+        assert!(html.contains("<h1>Welcome to Jsonic</h1>"));
+        assert!(html.contains("What is Jsonic?"));
+        assert!(html.contains("Proof of Transaction"));
         assert!(html.contains("GET  /health"));
     }
 
