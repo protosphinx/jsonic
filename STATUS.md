@@ -31,7 +31,7 @@ and MCP stdio server. Demo and RPC server ship as separate binaries
   `/metrics`, `/balance/:dao_id`, `/reputation/:dao_id`. Restores full node
   state from sled on startup, persists it on graceful shutdown. Integration
   tests drive the full lifecycle through the HTTP surface.
-- **Marketing homepage.** The root route now serves an ethereum.org-inspired
+- **Marketing homepage.** The root route now serves a distinct industrial
   Jsonic L1 marketing page with a locally served illustrated hero asset, while
   the protocol API stays available on explicit RPC endpoints.
 - **SDK and MCP surface.** Added `@protosphinx/jsonic-sdk`, a TypeScript

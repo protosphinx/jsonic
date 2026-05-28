@@ -6,7 +6,7 @@
 //!
 //! Routes:
 //!   GET  /                        marketing site
-//!   GET  /assets/marketing/jsonic-hero-commons.png
+//!   GET  /assets/marketing/jsonic-hero-factory-ledger.png
 //!   GET  /health                  liveness probe
 //!   POST /daos                    register a DAO (body: DAO JSON)
 //!   POST /transactions            submit a signed transaction (body: Transaction JSON)
@@ -42,8 +42,8 @@ pub fn build_router(node: SharedNode) -> Router {
     Router::new()
         .route("/", get(index))
         .route(
-            "/assets/marketing/jsonic-hero-commons.png",
-            get(hero_commons_asset),
+            "/assets/marketing/jsonic-hero-factory-ledger.png",
+            get(hero_factory_asset),
         )
         .route("/health", get(health))
         .route("/daos", post(register_dao))
@@ -112,19 +112,20 @@ struct ErrorResponse {
 // ---------------------------------------------------------------------------
 
 const LOGO_MARK: &str = include_str!("../assets/brand/logo-jsconic-mark-color.svg");
-const HERO_COMMONS_IMAGE: &[u8] = include_bytes!("../assets/marketing/jsonic-hero-commons.png");
+const HERO_FACTORY_IMAGE: &[u8] =
+    include_bytes!("../assets/marketing/jsonic-hero-factory-ledger.png");
 
 async fn index() -> Html<String> {
     Html(marketing_page())
 }
 
-async fn hero_commons_asset() -> impl IntoResponse {
+async fn hero_factory_asset() -> impl IntoResponse {
     (
         [
             ("content-type", "image/png"),
             ("cache-control", "public, max-age=31536000, immutable"),
         ],
-        HERO_COMMONS_IMAGE,
+        HERO_FACTORY_IMAGE,
     )
         .into_response()
 }
@@ -158,478 +159,35 @@ const MARKETING_HEAD: &str = r##"<!doctype html>
   <style>
     :root {
       color-scheme: light;
-      --ink: #141821;
-      --muted: #5f6878;
-      --line: #d9dee7;
-      --paper: #f7f8fb;
-      --white: #ffffff;
-      --blue: #2477b8;
-      --green: #169b6b;
-      --gold: #d99a21;
-      --violet: #6b4ba1;
-      --shadow: 0 18px 50px rgba(22, 30, 46, 0.12);
+      --ink: #111418;
+      --muted: #5d6467;
+      --paper: #fbfaf4;
+      --panel: #ffffff;
+      --line: #d9d3c3;
+      --teal: #0f8d74;
+      --amber: #c88d24;
+      --violet: #6d55c8;
+      --bluewash: #e7f7ff;
+      --shadow: 0 22px 70px rgba(36, 42, 39, 0.14);
     }
 
     * { box-sizing: border-box; }
 
+    html,
+    body {
+      max-width: 100%;
+      overflow-x: hidden;
+    }
+
     body {
       margin: 0;
-      font-family: "Aptos", "Segoe UI", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
       color: var(--ink);
       background: var(--paper);
+      font-family: "Aptos", "Segoe UI", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
       letter-spacing: 0;
     }
 
     a { color: inherit; text-decoration: none; }
-
-    .site-header {
-      position: sticky;
-      top: 0;
-      z-index: 20;
-      border-bottom: 1px solid rgba(217, 222, 231, 0.82);
-      background: rgba(255, 255, 255, 0.92);
-      backdrop-filter: blur(14px);
-    }
-
-    .nav {
-      max-width: 1180px;
-      margin: 0 auto;
-      min-height: 72px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 28px;
-      padding: 0 24px;
-    }
-
-    .brand {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      font-weight: 800;
-      font-size: 18px;
-    }
-
-    .brand svg {
-      width: 42px;
-      height: 42px;
-      display: block;
-    }
-
-    .nav-links {
-      display: flex;
-      align-items: center;
-      gap: 22px;
-      color: var(--muted);
-      font-size: 14px;
-      font-weight: 650;
-    }
-
-    .nav-links a:hover { color: var(--ink); }
-
-    .button {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      min-height: 42px;
-      padding: 0 18px;
-      border-radius: 7px;
-      border: 1px solid var(--ink);
-      background: var(--ink);
-      color: var(--white);
-      font-weight: 760;
-      font-size: 14px;
-      white-space: nowrap;
-    }
-
-    .button.secondary {
-      background: transparent;
-      color: var(--ink);
-      border-color: var(--line);
-    }
-
-    .hero {
-      position: relative;
-      min-height: calc(90vh - 72px);
-      padding: 0;
-      border-top: 0;
-      overflow: hidden;
-      background:
-        linear-gradient(rgba(247, 248, 251, 0.68), rgba(247, 248, 251, 0.9)),
-        url("https://images.unsplash.com/photo-1581093458791-9f3c3900df7b?auto=format&fit=crop&w=2200&q=80") center/cover;
-    }
-
-    .hero-inner {
-      max-width: 1180px;
-      margin: 0 auto;
-      min-height: calc(90vh - 72px);
-      display: grid;
-      grid-template-columns: minmax(0, 1.02fr) minmax(340px, 0.78fr);
-      align-items: center;
-      gap: 56px;
-      padding: 56px 24px 110px;
-    }
-
-    .eyebrow {
-      display: inline-flex;
-      align-items: center;
-      gap: 10px;
-      color: var(--green);
-      font-weight: 800;
-      font-size: 13px;
-      text-transform: uppercase;
-    }
-
-    .eyebrow::before {
-      content: "";
-      width: 36px;
-      height: 2px;
-      background: var(--green);
-    }
-
-    h1 {
-      margin: 22px 0 20px;
-      max-width: 820px;
-      font-family: Georgia, "Times New Roman", serif;
-      font-size: 88px;
-      line-height: 0.96;
-      font-weight: 700;
-    }
-
-    .hero-copy {
-      max-width: 650px;
-      color: #303848;
-      font-size: 20px;
-      line-height: 1.6;
-      margin: 0 0 34px;
-    }
-
-    .hero-actions {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      flex-wrap: wrap;
-    }
-
-    .network-panel {
-      background: rgba(255, 255, 255, 0.88);
-      border: 1px solid rgba(217, 222, 231, 0.9);
-      border-radius: 8px;
-      box-shadow: var(--shadow);
-      padding: 24px;
-    }
-
-    .panel-title {
-      display: flex;
-      justify-content: space-between;
-      gap: 16px;
-      margin-bottom: 22px;
-      font-size: 13px;
-      color: var(--muted);
-      font-weight: 760;
-      text-transform: uppercase;
-    }
-
-    .flow {
-      position: relative;
-      min-height: 320px;
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      background:
-        linear-gradient(90deg, rgba(36, 119, 184, 0.08) 1px, transparent 1px),
-        linear-gradient(rgba(22, 155, 107, 0.08) 1px, transparent 1px),
-        #ffffff;
-      background-size: 42px 42px;
-      overflow: hidden;
-    }
-
-    .flow::before,
-    .flow::after {
-      content: "";
-      position: absolute;
-      left: 14%;
-      right: 14%;
-      height: 2px;
-      background: var(--line);
-      transform-origin: left center;
-    }
-
-    .flow::before { top: 40%; transform: rotate(11deg); }
-    .flow::after { top: 60%; transform: rotate(-13deg); }
-
-    .node {
-      position: absolute;
-      width: 112px;
-      min-height: 78px;
-      padding: 12px;
-      border-radius: 8px;
-      background: #fff;
-      border: 1px solid var(--line);
-      box-shadow: 0 10px 24px rgba(22, 30, 46, 0.1);
-      font-size: 13px;
-      font-weight: 760;
-    }
-
-    .node span {
-      display: block;
-      margin-top: 8px;
-      color: var(--muted);
-      font-size: 12px;
-      font-weight: 600;
-      line-height: 1.3;
-    }
-
-    .n1 { top: 28px; left: 28px; border-top: 4px solid var(--gold); }
-    .n2 { top: 126px; right: 34px; border-top: 4px solid var(--blue); }
-    .n3 { bottom: 32px; left: 72px; border-top: 4px solid var(--green); }
-
-    .metric-strip {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 12px;
-      margin-top: 14px;
-    }
-
-    .metric {
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      background: #fff;
-      padding: 14px;
-    }
-
-    .metric strong {
-      display: block;
-      font-size: 24px;
-    }
-
-    .metric span {
-      display: block;
-      color: var(--muted);
-      font-size: 12px;
-      margin-top: 4px;
-    }
-
-    section {
-      padding: 86px 24px;
-      border-top: 1px solid var(--line);
-      background: var(--white);
-    }
-
-    section.alt { background: #f0f4f8; }
-
-    .section-inner {
-      max-width: 1180px;
-      margin: 0 auto;
-    }
-
-    .section-heading {
-      max-width: 780px;
-      margin-bottom: 38px;
-    }
-
-    h2 {
-      margin: 0 0 14px;
-      font-family: Georgia, "Times New Roman", serif;
-      font-size: 50px;
-      line-height: 1.05;
-      font-weight: 700;
-    }
-
-    .section-heading p {
-      margin: 0;
-      color: var(--muted);
-      font-size: 18px;
-      line-height: 1.65;
-    }
-
-    .grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 18px;
-    }
-
-    .card {
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      background: #fff;
-      padding: 24px;
-      min-height: 210px;
-    }
-
-    .card .kicker {
-      color: var(--blue);
-      font-size: 13px;
-      font-weight: 820;
-      text-transform: uppercase;
-      margin-bottom: 18px;
-    }
-
-    .card h3 {
-      margin: 0 0 12px;
-      font-size: 22px;
-      line-height: 1.2;
-    }
-
-    .card p {
-      color: var(--muted);
-      margin: 0;
-      line-height: 1.62;
-    }
-
-    .architecture {
-      display: grid;
-      grid-template-columns: 0.9fr 1.1fr;
-      gap: 32px;
-      align-items: start;
-    }
-
-    .steps {
-      display: grid;
-      gap: 12px;
-    }
-
-    .step {
-      display: grid;
-      grid-template-columns: 42px 1fr;
-      gap: 16px;
-      padding: 18px;
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      background: #fff;
-    }
-
-    .step-number {
-      width: 42px;
-      height: 42px;
-      border-radius: 50%;
-      background: var(--ink);
-      color: #fff;
-      display: grid;
-      place-items: center;
-      font-weight: 820;
-    }
-
-    .step h3 {
-      margin: 0 0 6px;
-      font-size: 18px;
-    }
-
-    .step p {
-      margin: 0;
-      color: var(--muted);
-      line-height: 1.55;
-    }
-
-    .terminal {
-      border-radius: 8px;
-      overflow: hidden;
-      border: 1px solid #202737;
-      background: #10141d;
-      color: #d7e0ef;
-      box-shadow: var(--shadow);
-    }
-
-    .terminal-head {
-      height: 42px;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      padding: 0 16px;
-      border-bottom: 1px solid #252d3d;
-      color: #8d99aa;
-      font-size: 13px;
-    }
-
-    .dot {
-      width: 10px;
-      height: 10px;
-      border-radius: 50%;
-      background: var(--gold);
-    }
-
-    .dot:nth-child(2) { background: var(--green); }
-    .dot:nth-child(3) { background: var(--blue); }
-
-    pre {
-      margin: 0;
-      padding: 22px;
-      overflow-x: auto;
-      font: 14px/1.7 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-    }
-
-    .footer {
-      padding: 34px 24px;
-      background: var(--ink);
-      color: #cfd6e2;
-    }
-
-    .footer-inner {
-      max-width: 1180px;
-      margin: 0 auto;
-      display: flex;
-      justify-content: space-between;
-      gap: 24px;
-      flex-wrap: wrap;
-      font-size: 14px;
-    }
-
-    @media (max-width: 860px) {
-      .nav { min-height: 64px; }
-      .nav-links { display: none; }
-      .hero-inner {
-        grid-template-columns: 1fr;
-        min-height: auto;
-        padding: 48px 20px 74px;
-      }
-      h1 { font-size: 54px; }
-      h2 { font-size: 38px; }
-      .hero-copy { font-size: 18px; }
-      .network-panel { padding: 16px; }
-      .grid,
-      .architecture,
-      .metric-strip {
-        grid-template-columns: 1fr;
-      }
-      section { padding: 64px 20px; }
-      .flow { min-height: 280px; }
-      .node { width: 104px; }
-    }
-
-    @media (max-width: 520px) {
-      .hero-inner {
-        max-width: 390px;
-        margin: 0;
-      }
-      h1 {
-        max-width: 310px;
-        font-size: 40px;
-      }
-      h2 { font-size: 32px; }
-      .hero-copy {
-        max-width: 350px;
-        font-size: 17px;
-      }
-      .button { width: 100%; }
-      .hero-actions { align-items: stretch; }
-      .network-panel {
-        width: 100%;
-        max-width: 350px;
-        overflow: hidden;
-      }
-      .flow { min-height: 238px; }
-      .n1 { top: 28px; left: 28px; }
-      .n2 { top: 96px; right: 16px; }
-      .n3 { bottom: 20px; left: 48px; }
-      .metric-strip {
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-      }
-      .metric { padding: 10px; }
-      .metric strong { font-size: 20px; }
-      .panel-title {
-        flex-direction: column;
-        gap: 4px;
-      }
-    }
 
     .sr-only {
       position: absolute;
@@ -643,306 +201,350 @@ const MARKETING_HEAD: &str = r##"<!doctype html>
       border: 0;
     }
 
-    html,
-    body {
-      max-width: 100%;
-      overflow-x: hidden;
-    }
-
-    body {
-      background: #fff;
-      color: #111;
-      font-family: "Aptos", "Segoe UI", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
-    }
-
     .site-header {
-      position: relative;
-      border-top: 1px solid #222;
-      border-bottom: 1px solid #d7d7d7;
-      background: #fff;
-      backdrop-filter: none;
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      border-bottom: 1px solid rgba(17, 20, 24, 0.12);
+      background: rgba(251, 250, 244, 0.94);
+      backdrop-filter: blur(18px);
     }
 
     .nav {
-      max-width: 1800px;
-      min-height: 88px;
-      padding: 0 36px;
-      gap: 32px;
+      max-width: 1280px;
+      min-height: 74px;
+      margin: 0 auto;
+      padding: 0 28px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 28px;
     }
 
     .brand {
-      width: 42px;
-      min-width: 42px;
-      gap: 0;
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 19px;
+      font-weight: 820;
     }
 
     .brand svg {
-      width: 34px;
-      height: 34px;
+      width: 38px;
+      height: 38px;
+      display: block;
     }
 
     .nav-links {
-      flex: 1;
-      gap: 40px;
-      color: #111;
-      font-size: 22px;
-      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 28px;
+      color: #2a2f32;
+      font-size: 15px;
+      font-weight: 720;
     }
+
+    .nav-links a:hover { color: var(--teal); }
 
     .nav-actions {
       display: flex;
       align-items: center;
-      gap: 28px;
-      color: #111;
-      font-size: 20px;
-      font-weight: 520;
-    }
-
-    .search-pill {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      min-width: 205px;
-      min-height: 54px;
-      padding: 0 16px;
-      border: 1px solid #8d8d8d;
-      border-radius: 4px;
-      color: #111;
-      background: #fff;
-    }
-
-    .search-pill .key {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      width: 28px;
-      height: 28px;
-      border: 1px solid #a7a7a7;
-      border-radius: 4px;
-      color: #777;
-      font-size: 15px;
-      line-height: 1;
-    }
-
-    .nav-icon {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      white-space: nowrap;
-    }
-
-    .hero {
-      min-height: auto;
-      border-top: 0;
-      background: #fff;
-      overflow: visible;
-    }
-
-    .hero-art {
-      max-width: 1888px;
-      margin: 0 auto;
-      padding: 0 28px;
-      background: #fff;
-    }
-
-    .hero-art img {
-      display: block;
-      width: 100%;
-      height: 590px;
-      object-fit: cover;
-      object-position: center;
-      border: 0;
-    }
-
-    .hero-copy-block {
-      max-width: 960px;
-      margin: 88px auto 30px;
-      padding: 0 24px;
-      text-align: center;
-    }
-
-    .eyebrow {
-      display: block;
-      color: #5f2eea;
-      font-size: 18px;
-      font-weight: 760;
-      line-height: 1.2;
-      text-transform: uppercase;
-    }
-
-    .eyebrow::before { content: none; }
-
-    h1 {
-      max-width: 860px;
-      margin: 34px auto 28px;
-      font-family: "Aptos", "Segoe UI", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
-      font-size: 76px;
-      line-height: 0.98;
-      font-weight: 860;
-      letter-spacing: 0;
-    }
-
-    .hero-copy {
-      max-width: 830px;
-      margin: 0 auto 34px;
-      color: #5d5d5d;
-      font-size: 29px;
-      line-height: 1.45;
-    }
-
-    .hero-actions {
-      justify-content: center;
       gap: 14px;
     }
 
-    .button {
-      min-height: 48px;
-      padding: 0 24px;
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 9px;
+      min-height: 40px;
+      padding: 0 14px;
+      border: 1px solid var(--line);
       border-radius: 999px;
-      border-color: #111;
-      background: #111;
-      color: #fff;
-      font-size: 16px;
+      background: rgba(255, 255, 255, 0.78);
+      font-size: 14px;
       font-weight: 760;
     }
 
+    .status-dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: var(--teal);
+      box-shadow: 0 0 0 5px rgba(15, 141, 116, 0.13);
+    }
+
+    .button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 46px;
+      padding: 0 20px;
+      border: 1px solid var(--ink);
+      border-radius: 7px;
+      background: var(--ink);
+      color: #fff;
+      font-size: 15px;
+      font-weight: 780;
+      white-space: nowrap;
+    }
+
     .button.secondary {
-      background: #fff;
-      color: #111;
-      border-color: #bcbcbc;
+      background: rgba(255, 255, 255, 0.74);
+      color: var(--ink);
+      border-color: rgba(17, 20, 24, 0.22);
     }
 
-    section {
-      padding: 96px 44px;
-      border-top: 0;
-      background: #fff;
-    }
-
-    .section-inner {
-      max-width: 1800px;
-    }
-
-    .editorial {
-      display: grid;
-      grid-template-columns: minmax(0, 1fr) 470px;
-      gap: 88px;
-      align-items: start;
+    .hero {
+      position: relative;
       min-height: 560px;
+      display: grid;
+      align-items: stretch;
+      background:
+        linear-gradient(90deg, rgba(251, 250, 244, 0.98) 0%, rgba(251, 250, 244, 0.88) 44%, rgba(251, 250, 244, 0.16) 80%),
+        url("/assets/marketing/jsonic-hero-factory-ledger.png") center/cover;
+      border-bottom: 1px solid var(--line);
+      overflow: hidden;
     }
 
-    .editorial-copy {
-      max-width: 840px;
+    .hero::after {
+      content: "";
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      height: 54px;
+      background:
+        linear-gradient(90deg, rgba(15, 141, 116, 0.18), rgba(200, 141, 36, 0.18), rgba(109, 85, 200, 0.14)),
+        linear-gradient(var(--line), var(--line)) top/100% 1px no-repeat;
     }
 
-    h2 {
-      margin: 26px 0 46px;
-      font-family: "Aptos", "Segoe UI", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
-      font-size: 72px;
-      line-height: 1.06;
+    .hero-inner {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 52px 28px 66px;
+      display: grid;
+      align-content: center;
+      gap: 24px;
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      color: var(--teal);
+      font-size: 13px;
       font-weight: 860;
       letter-spacing: 0;
+      text-transform: uppercase;
     }
 
-    .editorial-copy p,
-    .split-copy p {
+    .eyebrow::before {
+      content: "";
+      width: 42px;
+      height: 2px;
+      background: var(--teal);
+    }
+
+    h1,
+    h2,
+    h3,
+    p {
+      overflow-wrap: anywhere;
+    }
+
+    h1 {
+      max-width: 760px;
       margin: 0;
-      color: #616161;
-      font-size: 30px;
+      font-size: 60px;
+      line-height: 0.96;
+      font-weight: 880;
+    }
+
+    .hero-copy {
+      max-width: 660px;
+      margin: 0;
+      color: #31383b;
+      font-size: 20px;
       line-height: 1.55;
     }
 
-    .stats {
-      display: grid;
-      gap: 44px;
-      border-left: 1px solid #d3d3d3;
-      padding: 60px 0 0 90px;
-    }
-
-    .stat {
-      display: grid;
-      grid-template-columns: 40px 1fr;
-      gap: 20px;
-      align-items: start;
-    }
-
-    .stat-icon {
-      color: #6c6c6c;
-      font-size: 32px;
-      line-height: 1;
-    }
-
-    .stat strong {
-      display: block;
-      color: #111;
-      font-size: 46px;
-      line-height: 1;
-      font-weight: 840;
-    }
-
-    .stat span:last-child {
-      display: block;
-      margin-top: 12px;
-      color: #606060;
-      font-size: 20px;
-    }
-
-    .split {
-      display: grid;
-      grid-template-columns: minmax(0, 0.95fr) minmax(420px, 1fr);
-      gap: 72px;
+    .hero-actions {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
       align-items: center;
     }
 
-    .split-copy {
-      max-width: 780px;
+    .signal-strip {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      max-width: 820px;
+      margin-top: 8px;
+      border: 1px solid rgba(17, 20, 24, 0.16);
+      background: rgba(255, 255, 255, 0.72);
+      backdrop-filter: blur(10px);
     }
 
-    .split-image {
-      align-self: end;
-      overflow: hidden;
-      border-radius: 48px 48px 0 0;
-      border: 1px solid #d9d9f2;
-      background: #eff7ff;
+    .signal {
+      padding: 14px 18px;
+      border-right: 1px solid rgba(17, 20, 24, 0.14);
     }
 
-    .split-image img {
+    .signal:last-child { border-right: 0; }
+
+    .signal strong {
       display: block;
-      width: 100%;
-      height: 420px;
-      object-fit: cover;
-      object-position: center;
+      font-size: 22px;
+      line-height: 1.1;
     }
 
+    .signal span {
+      display: block;
+      margin-top: 7px;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.3;
+    }
+
+    section {
+      padding: 92px 28px;
+      background: var(--paper);
+    }
+
+    .section-inner {
+      max-width: 1280px;
+      margin: 0 auto;
+    }
+
+    .section-heading {
+      max-width: 780px;
+      margin-bottom: 42px;
+    }
+
+    h2 {
+      margin: 16px 0 0;
+      font-size: 56px;
+      line-height: 1.04;
+      font-weight: 860;
+    }
+
+    .section-heading p {
+      margin: 22px 0 0;
+      color: var(--muted);
+      font-size: 21px;
+      line-height: 1.62;
+    }
+
+    .proof-layout {
+      display: grid;
+      grid-template-columns: minmax(0, 0.95fr) minmax(420px, 1fr);
+      gap: 48px;
+      align-items: start;
+    }
+
+    .proof-list {
+      display: grid;
+      gap: 12px;
+    }
+
+    .proof-step {
+      display: grid;
+      grid-template-columns: 64px 1fr;
+      gap: 18px;
+      padding: 22px;
+      border: 1px solid var(--line);
+      background: rgba(255, 255, 255, 0.72);
+    }
+
+    .proof-step span {
+      color: var(--amber);
+      font-size: 26px;
+      font-weight: 860;
+    }
+
+    .proof-step h3 {
+      margin: 0 0 8px;
+      font-size: 23px;
+      line-height: 1.15;
+    }
+
+    .proof-step p {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.55;
+    }
+
+    .commerce-section {
+      background: #eef8f3;
+      border-top: 1px solid var(--line);
+      border-bottom: 1px solid var(--line);
+    }
+
+    .commerce-grid,
     .path-grid {
       display: grid;
-      grid-template-columns: repeat(4, minmax(0, 1fr));
-      gap: 18px;
-      margin-top: 36px;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 16px;
     }
 
-    .path-card {
+    .tile {
       min-height: 260px;
-      padding: 28px;
-      border: 1px solid #d8d8d8;
-      border-radius: 6px;
-      background: #fff;
+      padding: 26px;
+      border: 1px solid rgba(17, 20, 24, 0.14);
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.78);
+      box-shadow: 0 14px 36px rgba(36, 42, 39, 0.08);
     }
 
-    .path-card h3 {
+    .tile h3 {
       margin: 0 0 16px;
       font-size: 28px;
       line-height: 1.15;
     }
 
-    .path-card p {
+    .tile p {
       margin: 0;
-      color: #5f5f5f;
-      font-size: 18px;
-      line-height: 1.55;
+      color: var(--muted);
+      font-size: 17px;
+      line-height: 1.58;
+    }
+
+    .builders-section {
+      background:
+        linear-gradient(120deg, rgba(231, 247, 255, 0.8), rgba(251, 250, 244, 0.84)),
+        var(--paper);
     }
 
     .node-section {
-      background: #f7f7fb;
+      background: #151816;
+      color: #f6f0df;
+    }
+
+    .node-section .eyebrow {
+      color: #7ee0c9;
+    }
+
+    .node-section .eyebrow::before {
+      background: #7ee0c9;
+    }
+
+    .node-section p {
+      color: #c7c2b4;
+    }
+
+    .node-section .button {
+      background: #f6f0df;
+      color: #111418;
+      border-color: #f6f0df;
+    }
+
+    .node-section .button.secondary {
+      background: transparent;
+      color: #f6f0df;
+      border-color: rgba(246, 240, 223, 0.34);
     }
 
     .node-panel {
@@ -953,134 +555,181 @@ const MARKETING_HEAD: &str = r##"<!doctype html>
     }
 
     .terminal {
+      border: 1px solid rgba(246, 240, 223, 0.22);
       border-radius: 8px;
-      border: 1px solid #1f1f1f;
-      background: #111;
-      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.16);
+      background: #0b0d0c;
+      color: #dff8ee;
+      overflow: hidden;
+      box-shadow: var(--shadow);
+    }
+
+    .terminal-head {
+      min-height: 42px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 0 16px;
+      border-bottom: 1px solid rgba(246, 240, 223, 0.18);
+      color: #9eb9ad;
+      font-size: 13px;
+    }
+
+    .dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--amber);
+    }
+
+    .dot:nth-child(2) { background: var(--teal); }
+    .dot:nth-child(3) { background: var(--violet); }
+
+    pre {
+      margin: 0;
+      padding: 24px;
+      overflow-x: auto;
+      font: 14px/1.8 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
     }
 
     .footer {
-      background: #111;
+      padding: 34px 28px;
+      background: #0b0d0c;
+      color: #d6d1c3;
     }
 
-    @media (max-width: 1100px) {
-      .nav {
-        min-height: 78px;
-      }
+    .footer-inner {
+      max-width: 1280px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      gap: 24px;
+      flex-wrap: wrap;
+      font-size: 14px;
+    }
 
+    @media (max-width: 980px) {
       .nav-links {
-        gap: 22px;
-        font-size: 18px;
+        gap: 18px;
+        font-size: 14px;
       }
 
       .nav-actions {
         display: none;
       }
 
-      .hero-art img {
-        height: 420px;
+      .hero {
+        min-height: 560px;
+        background:
+          linear-gradient(rgba(251, 250, 244, 0.9), rgba(251, 250, 244, 0.72)),
+          url("/assets/marketing/jsonic-hero-factory-ledger.png") center/cover;
+      }
+
+      .hero-inner {
+        padding-top: 56px;
       }
 
       h1 {
-        font-size: 58px;
+        max-width: 680px;
+        font-size: 50px;
       }
 
       h2 {
-        font-size: 54px;
+        font-size: 44px;
       }
 
-      .hero-copy,
-      .editorial-copy p,
-      .split-copy p {
-        font-size: 23px;
-      }
-
-      .editorial,
-      .split,
+      .proof-layout,
       .node-panel {
         grid-template-columns: 1fr;
       }
 
-      .stats {
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-        border-left: 0;
-        border-top: 1px solid #d3d3d3;
-        padding: 38px 0 0;
+      .commerce-grid,
+      .path-grid,
+      .signal-strip {
+        grid-template-columns: 1fr;
       }
 
-      .path-grid {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
+      .signal {
+        border-right: 0;
+        border-bottom: 1px solid rgba(17, 20, 24, 0.14);
+      }
+
+      .signal:last-child {
+        border-bottom: 0;
       }
     }
 
-    @media (max-width: 720px) {
+    @media (max-width: 640px) {
       .nav {
-        padding: 0 20px;
+        min-height: 66px;
+        padding: 0 18px;
       }
 
       .nav-links {
         display: none;
       }
 
-      .hero-art {
-        padding: 0;
+      .brand svg {
+        width: 34px;
+        height: 34px;
       }
 
-      .hero-art img {
-        height: 270px;
+      .hero {
+        min-height: 560px;
+        background:
+          linear-gradient(rgba(251, 250, 244, 0.96), rgba(251, 250, 244, 0.74)),
+          url("/assets/marketing/jsonic-hero-factory-ledger.png") center top/auto 230px no-repeat,
+          var(--paper);
       }
 
-      .hero-copy-block {
-        max-width: 390px;
-        margin: 54px 0 30px;
-        padding: 0 20px;
+      .hero::after {
+        height: 46px;
+      }
+
+      .hero-inner {
+        padding: 248px 20px 64px;
+        gap: 24px;
       }
 
       h1 {
         max-width: 350px;
-        font-size: 38px;
-      }
-
-      h2 {
         font-size: 42px;
       }
 
-      .hero-copy,
-      .editorial-copy p,
-      .split-copy p {
+      .hero-copy {
         max-width: 350px;
-        font-size: 20px;
+        font-size: 18px;
       }
 
       .hero-actions {
-        max-width: 350px;
-        margin: 0;
+        align-items: stretch;
+      }
+
+      .button {
+        width: 100%;
+      }
+
+      .signal-strip {
+        display: none;
       }
 
       section {
-        padding: 72px 20px;
+        padding: 68px 20px;
       }
 
-      .editorial {
-        min-height: auto;
-        gap: 48px;
+      h2 {
+        font-size: 34px;
       }
 
-      .stats,
-      .path-grid {
+      .section-heading p {
+        font-size: 18px;
+      }
+
+      .proof-step {
         grid-template-columns: 1fr;
       }
 
-      .split {
-        gap: 40px;
-      }
-
-      .split-image img {
-        height: 280px;
-      }
-
-      .node-panel {
-        gap: 32px;
+      .tile {
+        min-height: auto;
       }
     }
   </style>
@@ -1091,102 +740,118 @@ const MARKETING_HEAD: &str = r##"<!doctype html>
       <a class="brand" href="/" aria-label="Jsonic home">
 "##;
 
-const MARKETING_TAIL: &str = r##"        <span class="sr-only">Jsonic</span>
+const MARKETING_TAIL: &str = r##"        <span>Jsonic</span>
       </a>
       <div class="nav-links">
-        <a href="#learn">Learn</a>
-        <a href="#use">Use</a>
-        <a href="#build">Build</a>
-        <a href="#participate">Participate</a>
-        <a href="#research">Research</a>
+        <a href="#protocol">Protocol</a>
+        <a href="#commerce">Commerce</a>
+        <a href="#builders">Builders</a>
+        <a href="#node">Node</a>
       </div>
-      <div class="nav-actions" aria-label="Site tools">
-        <a class="search-pill" href="https://github.com/protosphinx/jsonic" aria-label="Search Jsonic on GitHub">
-          <span>search</span>
-          <span class="key">cmd</span>
-          <span class="key">k</span>
-        </a>
-        <a class="nav-icon" href="/health">Node</a>
-        <span class="nav-icon">Languages EN</span>
+      <div class="nav-actions">
+        <a class="status-pill" href="/health"><span class="status-dot"></span>live node</a>
       </div>
     </nav>
   </header>
 
   <main>
-    <section class="hero" aria-labelledby="hero-heading">
-      <div class="hero-art">
-        <img src="/assets/marketing/jsonic-hero-commons.png" alt="Illustrated Jsonic manufacturing commons with makers, buyers, ledgers, and robotics.">
-      </div>
-      <div class="hero-copy-block">
+    <section class="hero" id="top" aria-labelledby="hero-heading">
+      <div class="hero-inner">
         <div class="eyebrow">Jsonic L1</div>
-        <h1 id="hero-heading">The manufacturing network that belongs to its makers</h1>
+        <h1 id="hero-heading">Manufacturing needs its own settlement layer</h1>
         <p class="hero-copy">
-          Jsonic is a Layer 1 blockchain where production, invoices, settlement,
-          and counterparty reputation become public economic infrastructure.
+          Jsonic turns signed invoices, payments, and production events into a
+          public chain for real commerce. Proof of Transaction rewards the
+          businesses that create value, not idle capital or fake volume.
         </p>
         <div class="hero-actions">
-          <a class="button" href="#learn">Start learning</a>
-          <a class="button secondary" href="/health">Check the live node</a>
+          <a class="button" href="#protocol">Read the protocol</a>
+          <a class="button secondary" href="/health">Check live node</a>
+        </div>
+        <div class="signal-strip" aria-label="Jsonic network facts">
+          <div class="signal"><strong>69 tests</strong><span>Core engine, API, and asset route covered</span></div>
+          <div class="signal"><strong>2-party proof</strong><span>Invoices only count when counterparties match</span></div>
+          <div class="signal"><strong>PageRank trust</strong><span>Reputation flows through verified trade</span></div>
         </div>
       </div>
     </section>
 
-    <section id="learn">
-      <div class="section-inner editorial">
-        <div class="editorial-copy">
-          <div class="eyebrow">The production-owned ledger</div>
-          <h2>Jsonic gives verified commerce a native chain</h2>
+    <section id="protocol">
+      <div class="section-inner proof-layout">
+        <div class="section-heading">
+          <div class="eyebrow">Protocol</div>
+          <h2>A ledger for signed economic activity</h2>
           <p>
-            A bank record says money moved. An ERP record says goods moved.
-            Jsonic connects both sides on-chain, so manufacturers and buyers can
-            prove useful economic work without trusting a private database.
+            Jsonic records the facts manufacturers already depend on:
+            production, invoices, settlement, and counterparty trust. The chain
+            mints around verified relationships instead of isolated assertions.
           </p>
         </div>
-        <aside class="stats" aria-label="Jsonic network facts">
-          <div class="stat"><span class="stat-icon">[]</span><div><strong>69</strong><span>core tests passing</span></div></div>
-          <div class="stat"><span class="stat-icon">POT</span><div><strong>2-party</strong><span>transaction proof</span></div></div>
-          <div class="stat"><span class="stat-icon">L1</span><div><strong>live</strong><span>reference RPC node</span></div></div>
-        </aside>
-      </div>
-    </section>
-
-    <section id="use">
-      <div class="section-inner split">
-        <div class="split-copy">
-          <div class="eyebrow">Your business is yours</div>
-          <h2>Use commerce without making fake volume valuable</h2>
-          <p>
-            Jsonic rewards signed activity between real counterparties. Reputation
-            flows through the transaction graph, so trusted buyers, suppliers,
-            and retailers make each other more credible over time.
-          </p>
-        </div>
-        <div class="split-image">
-          <img src="/assets/marketing/jsonic-hero-commons.png" alt="Jsonic manufacturing network illustration crop.">
+        <div class="proof-list">
+          <article class="proof-step">
+            <span>01</span>
+            <div><h3>Register a business DAO</h3><p>Each participant gets a ledger identity, signing key, and side-chain for local state.</p></div>
+          </article>
+          <article class="proof-step">
+            <span>02</span>
+            <div><h3>Match both sides of trade</h3><p>Invoices and payments become useful only when counterparties independently sign matching activity.</p></div>
+          </article>
+          <article class="proof-step">
+            <span>03</span>
+            <div><h3>Settle by reputation</h3><p>At Solstice, PageRank-weighted commerce determines who earned network rewards.</p></div>
+          </article>
         </div>
       </div>
     </section>
 
-    <section id="build">
+    <section class="commerce-section" id="commerce">
       <div class="section-inner">
-        <div class="editorial-copy">
-          <div class="eyebrow">Build on real work</div>
+        <div class="section-heading">
+          <div class="eyebrow">Commerce</div>
+          <h2>Built for supply chains, not speculation theater</h2>
+          <p>
+            The most valuable work on Jsonic is useful trade with reputable
+            counterparties. Empty circular activity can exist, but it cannot
+            build much trust.
+          </p>
+        </div>
+        <div class="commerce-grid">
+          <article class="tile">
+            <h3>Manufacturers</h3>
+            <p>Turn production and sales into verifiable network history without surrendering your operating data to a private marketplace.</p>
+          </article>
+          <article class="tile">
+            <h3>Buyers</h3>
+            <p>Carry reputation across suppliers by settling invoices and confirming real trade on a shared ledger.</p>
+          </article>
+          <article class="tile">
+            <h3>Operators</h3>
+            <p>Run the reference node, process signed activity, and inspect chain state through a simple RPC surface.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="builders-section" id="builders">
+      <div class="section-inner">
+        <div class="section-heading">
+          <div class="eyebrow">Builders</div>
           <h2>Choose your path into Jsonic</h2>
+          <p>
+            Start with protocol primitives, integrate the API, or connect agents
+            to the live node through the MCP server.
+          </p>
         </div>
         <div class="path-grid">
-          <article class="path-card">
+          <article class="tile">
             <h3>Learn the protocol</h3>
             <p>Understand DAOs, side-chains, Proof of Transaction, PageRank reputation, and Solstice minting.</p>
           </article>
-          <article class="path-card">
-            <h3>Use the network</h3>
-            <p>Register business identities, submit signed invoices and payments, and inspect balances.</p>
-          </article>
-          <article class="path-card">
+          <article class="tile">
             <h3>Build apps</h3>
             <p>Connect ERP systems, payment workflows, agents, and explorers through the JSON-RPC API.</p>
           </article>
-          <article class="path-card">
+          <article class="tile">
             <h3>Run a node</h3>
             <p>Operate the reference server with persistent state, replay protection, and live health checks.</p>
           </article>
@@ -1194,29 +859,10 @@ const MARKETING_TAIL: &str = r##"        <span class="sr-only">Jsonic</span>
       </div>
     </section>
 
-    <section id="participate">
-      <div class="section-inner editorial">
-        <div class="editorial-copy">
-          <div class="eyebrow">Participate</div>
-          <h2>Every honest counterparty strengthens the graph</h2>
-          <p>
-            The network gets better when real buyers confirm real production.
-            Honest supply chains compound reputation; isolated self-dealing
-            rings drift toward the trust floor.
-          </p>
-        </div>
-        <aside class="stats" aria-label="Jsonic participation model">
-          <div class="stat"><span class="stat-icon">01</span><div><strong>register</strong><span>a business DAO</span></div></div>
-          <div class="stat"><span class="stat-icon">02</span><div><strong>record</strong><span>signed commerce</span></div></div>
-          <div class="stat"><span class="stat-icon">03</span><div><strong>settle</strong><span>at Solstice</span></div></div>
-        </aside>
-      </div>
-    </section>
-
-    <section class="node-section" id="research">
+    <section class="node-section" id="node">
       <div class="section-inner node-panel">
-        <div class="split-copy">
-          <div class="eyebrow">Research and node</div>
+        <div class="section-heading">
+          <div class="eyebrow">Node</div>
           <h2>Proof of Transaction is running now</h2>
           <p>
             Jsonic is early, but the core engine is real: signed transaction
@@ -1444,10 +1090,10 @@ mod tests {
             .await
             .expect("read body");
         let html = String::from_utf8(bytes.to_vec()).expect("utf8 html");
-        assert!(html.contains("The manufacturing network that belongs to its makers"));
-        assert!(html.contains("Jsonic gives verified commerce a native chain"));
+        assert!(html.contains("Manufacturing needs its own settlement layer"));
+        assert!(html.contains("A ledger for signed economic activity"));
         assert!(html.contains("Proof of Transaction"));
-        assert!(html.contains("/assets/marketing/jsonic-hero-commons.png"));
+        assert!(html.contains("/assets/marketing/jsonic-hero-factory-ledger.png"));
         assert!(html.contains("GET  /health"));
     }
 
@@ -1458,7 +1104,7 @@ mod tests {
         let resp = app
             .oneshot(
                 Request::builder()
-                    .uri("/assets/marketing/jsonic-hero-commons.png")
+                    .uri("/assets/marketing/jsonic-hero-factory-ledger.png")
                     .body(Body::empty())
                     .unwrap(),
             )
