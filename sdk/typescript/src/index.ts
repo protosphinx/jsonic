@@ -36,6 +36,9 @@ export interface Health {
   height: number;
   pending: number;
   tick: number;
+  registered_daos: number;
+  heartbeat_ms: number;
+  total_token_supply: number;
 }
 
 export interface HeartbeatResponse {
@@ -98,6 +101,10 @@ export class JsonicClient {
 
   health(): Promise<Health> {
     return this.request("GET", "/health");
+  }
+
+  listDaos(): Promise<Dao[]> {
+    return this.request("GET", "/daos");
   }
 
   registerDao(dao: Dao): Promise<{ dao_id: DaoId }> {

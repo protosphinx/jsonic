@@ -16,7 +16,15 @@ test("JsonicClient trims trailing slash and reads health", async () => {
   const calls: Array<{ url: string; init: RequestInit }> = [];
   const fetchImpl = async (url: string | URL | Request, init?: RequestInit) => {
     calls.push({ url: String(url), init: init ?? {} });
-    return jsonResponse({ status: "ok", height: 7, pending: 2, tick: 11 });
+    return jsonResponse({
+      status: "ok",
+      height: 7,
+      pending: 2,
+      tick: 11,
+      registered_daos: 3,
+      heartbeat_ms: 500,
+      total_token_supply: 42
+    });
   };
 
   const client = new JsonicClient({
@@ -25,9 +33,39 @@ test("JsonicClient trims trailing slash and reads health", async () => {
   });
   const health = await client.health();
 
-  assert.deepEqual(health, { status: "ok", height: 7, pending: 2, tick: 11 });
+  assert.deepEqual(health, {
+    status: "ok",
+    height: 7,
+    pending: 2,
+    tick: 11,
+    registered_daos: 3,
+    heartbeat_ms: 500,
+    total_token_supply: 42
+  });
   assert.equal(calls[0]?.url, "http://node.example/health");
   assert.equal(calls[0]?.init.method, "GET");
+});
+
+test("JsonicClient lists registered DAOs", async () => {
+  const fetchImpl = async () =>
+    jsonResponse([
+      {
+        id: "dao1",
+        public_key: [1, 2, 3],
+        profile: {
+          name: "Acme",
+          sector: "Manufacturing",
+          registered_at: new Date(0).toISOString()
+        },
+        token_balance: 0
+      }
+    ]);
+
+  const client = new JsonicClient({ fetchImpl: fetchImpl as typeof fetch });
+  const daos = await client.listDaos();
+
+  assert.equal(daos.length, 1);
+  assert.equal(daos[0]?.id, "dao1");
 });
 
 test("JsonicClient serializes heartbeat requests", async () => {

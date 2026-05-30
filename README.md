@@ -16,7 +16,7 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/tests-69%20passing-yellowgreen" alt="Tests">
+  <img src="https://img.shields.io/badge/tests-75%20passing-yellowgreen" alt="Tests">
   <a href="https://github.com/protosphinx/jsonic/blob/main/LICENSE">
     <img src="https://img.shields.io/badge/license-CC--BY--SA--4.0-blue" alt="License">
   </a>
@@ -129,7 +129,7 @@ cargo run --bin jsonic-demo
 cargo run --bin jsonic-rpc
 # then: curl http://127.0.0.1:8080/health
 
-# Run tests (69 tests: crypto, POT, PageRank, side-chain, main-chain,
+# Run tests (75 tests: crypto, POT, PageRank, side-chain, main-chain,
 # end-to-end Sybil resistance, persistence round-trips, RPC integration, assets)
 cargo test
 ```
@@ -138,7 +138,8 @@ cargo test
 
 | Method | Path | Purpose |
 |--------|------|---------|
-| GET    | `/health` | Liveness probe (height, pending, tick) |
+| GET    | `/health` | Liveness probe (height, pending, tick, heartbeat timing, supply) |
+| GET    | `/daos` | List registered DAOs |
 | POST   | `/daos` | Register a DAO (body: DAO JSON) |
 | POST   | `/transactions` | Submit a signed Transaction |
 | POST   | `/heartbeats` | Tick the heartbeat N times (body: `{ticks: u64}`) |

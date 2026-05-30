@@ -3,7 +3,8 @@
 ## Current state
 
 Reference implementation of the Jsonic Layer 1 protocol in Rust: ~3500 lines
-across 9 core modules + an HTTP API + 2 binaries. 69 tests passing in <0.3s.
+across 9 core modules + an HTTP API + 2 binaries. 75 lib/API tests passing
+in <0.3s.
 Persistent full-node state via sled, JSON-RPC server over HTTP, TypeScript SDK,
 and MCP stdio server. Demo and RPC server ship as separate binaries
 (`jsonic-demo`, `jsonic-rpc`).
@@ -36,7 +37,14 @@ and MCP stdio server. Demo and RPC server ship as separate binaries
   the protocol API stays available on explicit RPC endpoints.
 - **SDK and MCP surface.** Added `@protosphinx/jsonic-sdk`, a TypeScript
   JSON-RPC client, and `@protosphinx/jsonic-mcp`, an MCP stdio server exposing
-  health, heartbeat, block, metrics, balance, and reputation tools.
+  health, DAO listing, heartbeat, block, metrics, balance, and reputation tools.
+- **Settlement accounting correctness.** Unmatched transactions now stay
+  pending until POT verifies them. Settlement updates the existing invoice and
+  payment entries without duplicating payment records, and side-chain balances
+  are computed from each DAO's perspective.
+- **Node discovery surface.** `GET /daos` lists registered identities and
+  `/health` includes registered DAO count, effective heartbeat timing, and
+  current token supply.
 - **Transaction admission hardening.** Nodes now reject unregistered
   counterparties, forged signatures, invalid amounts, and replayed or
   out-of-order sequence numbers before transactions reach side-chains.

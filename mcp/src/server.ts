@@ -28,6 +28,10 @@ server.tool("jsonic_health", "Read Jsonic node health", {}, async () => {
   return asText(await client.health());
 });
 
+server.tool("jsonic_list_daos", "List registered Jsonic DAOs", {}, async () => {
+  return asText(await client.listDaos());
+});
+
 server.tool(
   "jsonic_run_heartbeats",
   "Advance the Jsonic node heartbeat state machine",

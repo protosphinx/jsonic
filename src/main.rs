@@ -7,10 +7,8 @@
 //! 4. Side-chains record ledger entries
 //! 5. Solstice syncs to main-chain and mints tokens
 
-mod core;
-
-use core::dao::RegisteredDAO;
-use core::heartbeat::JsonicNode;
+use jsonic_protocol::core::dao::RegisteredDAO;
+use jsonic_protocol::core::heartbeat::JsonicNode;
 
 fn main() {
     println!("╔══════════════════════════════════════════════════════════════╗");
@@ -66,6 +64,11 @@ fn main() {
     node.register_dao(acme.dao.clone());
     node.register_dao(globex.dao.clone());
     node.register_dao(initech.dao.clone());
+    println!(
+        "▸ Registry indexed {} DAO identities",
+        node.registry.iter().count()
+    );
+    println!();
 
     // -----------------------------------------------------------------------
     // 3. Business transactions: invoices and payments
@@ -182,6 +185,10 @@ fn main() {
     println!();
 
     println!("  Main-chain height: {}", node.main_chain.height());
+    println!(
+        "  Effective heartbeat: {} ms",
+        node.effective_heartbeat_ms()
+    );
     println!(
         "  Total token supply: {:.4}",
         node.main_chain.total_token_supply

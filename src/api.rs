@@ -8,6 +8,7 @@
 //!   GET  /                        marketing site
 //!   GET  /assets/marketing/jsonic-hero-factory-ledger.png
 //!   GET  /health                  liveness probe
+//!   GET  /daos                    list registered DAOs
 //!   POST /daos                    register a DAO (body: DAO JSON)
 //!   POST /transactions            submit a signed transaction (body: Transaction JSON)
 //!   POST /heartbeats              tick the heartbeat n times (body: {ticks: u64})
@@ -46,7 +47,7 @@ pub fn build_router(node: SharedNode) -> Router {
             get(hero_factory_asset),
         )
         .route("/health", get(health))
-        .route("/daos", post(register_dao))
+        .route("/daos", get(list_daos).post(register_dao))
         .route("/transactions", post(submit_transaction))
         .route("/heartbeats", post(heartbeat))
         .route("/blocks/:height", get(get_block))
@@ -66,6 +67,9 @@ struct HealthResponse {
     height: u64,
     pending: usize,
     tick: u64,
+    registered_daos: u64,
+    heartbeat_ms: u64,
+    total_token_supply: f64,
 }
 
 #[derive(Serialize)]
@@ -146,6 +150,9 @@ async fn health(State(node): State<SharedNode>) -> Json<HealthResponse> {
         height: guard.main_chain.height(),
         pending: guard.pending_count(),
         tick: guard.tick,
+        registered_daos: guard.registry.count(),
+        heartbeat_ms: guard.effective_heartbeat_ms(),
+        total_token_supply: guard.main_chain.total_token_supply,
     })
 }
 
@@ -769,7 +776,7 @@ const MARKETING_TAIL: &str = r##"        <span>Jsonic</span>
           <a class="button secondary" href="/health">Check live node</a>
         </div>
         <div class="signal-strip" aria-label="Jsonic network facts">
-          <div class="signal"><strong>69 tests</strong><span>Core engine, API, and asset route covered</span></div>
+          <div class="signal"><strong>75 tests</strong><span>Core engine, API, and asset route covered</span></div>
           <div class="signal"><strong>2-party proof</strong><span>Invoices only count when counterparties match</span></div>
           <div class="signal"><strong>PageRank trust</strong><span>Reputation flows through verified trade</span></div>
         </div>
@@ -877,6 +884,7 @@ const MARKETING_TAIL: &str = r##"        <span>Jsonic</span>
         <div class="terminal" aria-label="Jsonic RPC endpoints">
           <div class="terminal-head"><span class="dot"></span><span class="dot"></span><span class="dot"></span><span>jsonic-rpc</span></div>
           <pre>GET  /health
+GET  /daos
 POST /daos
 POST /transactions
 POST /heartbeats
@@ -898,6 +906,11 @@ GET  /reputation/:dao_id</pre>
 </body>
 </html>
 "##;
+
+async fn list_daos(State(node): State<SharedNode>) -> Json<Vec<DAO>> {
+    let guard = node.read().await;
+    Json(guard.registry.iter().cloned().collect())
+}
 
 async fn register_dao(State(node): State<SharedNode>, Json(dao): Json<DAO>) -> impl IntoResponse {
     let id = dao.id.clone();
@@ -1069,6 +1082,9 @@ mod tests {
         assert_eq!(v["status"], "ok");
         assert_eq!(v["height"], 0);
         assert_eq!(v["tick"], 0);
+        assert_eq!(v["registered_daos"], 0);
+        assert_eq!(v["heartbeat_ms"], 60_000);
+        assert_eq!(v["total_token_supply"], 0.0);
     }
 
     #[tokio::test]
@@ -1094,7 +1110,9 @@ mod tests {
         assert!(html.contains("A ledger for signed economic activity"));
         assert!(html.contains("Proof of Transaction"));
         assert!(html.contains("/assets/marketing/jsonic-hero-factory-ledger.png"));
+        assert!(html.contains("75 tests"));
         assert!(html.contains("GET  /health"));
+        assert!(html.contains("GET  /daos"));
     }
 
     #[tokio::test]
@@ -1121,6 +1139,40 @@ mod tests {
             .await
             .expect("read png body");
         assert!(bytes.starts_with(b"\x89PNG"));
+    }
+
+    #[tokio::test]
+    async fn list_daos_reports_registered_identities() {
+        let node = fresh_node();
+        let app = build_router(node);
+        let alice = RegisteredDAO::register("Alice Co", "Tech");
+        let bob = RegisteredDAO::register("Bob Inc", "Mfg");
+
+        for dao in [alice.dao.clone(), bob.dao.clone()] {
+            let resp = app
+                .clone()
+                .oneshot(
+                    Request::builder()
+                        .method("POST")
+                        .uri("/daos")
+                        .header("content-type", "application/json")
+                        .body(Body::from(serde_json::to_vec(&dao).unwrap()))
+                        .unwrap(),
+                )
+                .await
+                .unwrap();
+            assert_eq!(resp.status(), StatusCode::CREATED);
+        }
+
+        let resp = app
+            .oneshot(Request::builder().uri("/daos").body(Body::empty()).unwrap())
+            .await
+            .unwrap();
+        assert_eq!(resp.status(), StatusCode::OK);
+        let daos = body_json(resp).await;
+        assert_eq!(daos.as_array().unwrap().len(), 2);
+        assert!(daos.to_string().contains(&alice.id()[..12]));
+        assert!(daos.to_string().contains(&bob.id()[..12]));
     }
 
     #[tokio::test]
@@ -1215,6 +1267,23 @@ mod tests {
         assert_eq!(resp.status(), StatusCode::OK);
         let bal = body_json(resp).await;
         assert!(bal["token_balance"].as_f64().unwrap() >= 0.0);
+        assert_eq!(bal["closing_balance"]["revenue"], 25_000.0);
+        assert_eq!(bal["closing_balance"]["accounts_receivable"], 0.0);
+
+        let resp = app
+            .clone()
+            .oneshot(
+                Request::builder()
+                    .uri(format!("/balance/{}", bob_id))
+                    .body(Body::empty())
+                    .unwrap(),
+            )
+            .await
+            .unwrap();
+        assert_eq!(resp.status(), StatusCode::OK);
+        let bal = body_json(resp).await;
+        assert_eq!(bal["closing_balance"]["expenses"], 25_000.0);
+        assert_eq!(bal["closing_balance"]["accounts_payable"], 0.0);
     }
 
     #[tokio::test]

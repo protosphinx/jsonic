@@ -163,6 +163,7 @@ impl JsonicNode {
     /// For invoice+payment pairs, attempt settlement.
     fn process_matching(&mut self) {
         let mut matched_indices: Vec<usize> = Vec::new();
+        let mut settled_indices: Vec<usize> = Vec::new();
         let mut settlements: Vec<(usize, usize)> = Vec::new();
 
         // Find invoice-payment pairs for settlement
@@ -209,6 +210,7 @@ impl JsonicNode {
         for (inv_idx, pay_idx) in &settlements {
             let invoice_id = self.pending_matching[*inv_idx].id.clone();
             let invoice_from = self.pending_matching[*inv_idx].from.clone();
+            let payment_id = self.pending_matching[*pay_idx].id.clone();
             let payment_from = self.pending_matching[*pay_idx].from.clone();
             let settled_value = self.pending_matching[*inv_idx].amount;
 
@@ -219,24 +221,18 @@ impl JsonicNode {
 
             // Update invoice status to Settled on the issuer's side-chain
             if let Some(chain) = self.side_chains.get_mut(&invoice_from) {
-                for block in &mut chain.blocks {
-                    for tx in &mut block.transactions {
-                        if tx.id == invoice_id {
-                            tx.status = TransactionStatus::Settled;
-                        }
-                    }
-                }
+                chain.set_transaction_status(&invoice_id, TransactionStatus::Settled);
             }
 
-            // Record payment on the payer's side-chain
+            // Update the existing payment on the payer's side-chain. The
+            // payment was already admitted during submit_transaction, so
+            // settlement must not append a duplicate payment transaction.
             if let Some(chain) = self.side_chains.get_mut(&payment_from) {
-                let mut payment_tx = self.pending_matching[*pay_idx].clone();
-                payment_tx.status = TransactionStatus::Settled;
-                chain.submit_transaction(payment_tx);
+                chain.set_transaction_status(&payment_id, TransactionStatus::Settled);
             }
 
-            matched_indices.push(*inv_idx);
-            matched_indices.push(*pay_idx);
+            settled_indices.push(*inv_idx);
+            settled_indices.push(*pay_idx);
         }
 
         // Update matched transaction statuses
@@ -247,23 +243,17 @@ impl JsonicNode {
                 let tx_id = tx.id.clone();
 
                 if let Some(chain) = self.side_chains.get_mut(&from_id) {
-                    for block in &mut chain.blocks {
-                        for block_tx in &mut block.transactions {
-                            if block_tx.id == tx_id
-                                && block_tx.status == TransactionStatus::Unmatched
-                            {
-                                block_tx.status = TransactionStatus::Matched;
-                            }
-                        }
-                    }
+                    chain.set_transaction_status(&tx_id, TransactionStatus::Matched);
                 }
             }
         }
 
         // Remove matched/settled transactions from the pending pool
-        matched_indices.sort_unstable();
-        matched_indices.dedup();
-        for idx in matched_indices.into_iter().rev() {
+        let mut remove_indices = matched_indices;
+        remove_indices.extend(settled_indices);
+        remove_indices.sort_unstable();
+        remove_indices.dedup();
+        for idx in remove_indices.into_iter().rev() {
             if idx < self.pending_matching.len() {
                 self.pending_matching.remove(idx);
             }
@@ -370,9 +360,10 @@ mod tests {
 
         // DAO-A should have received tokens (it had verified transactions)
         let dao_a_entry = node.registry.get(&dao_a_id).unwrap();
+        let dao_b_entry = node.registry.get(&dao_b_id).unwrap();
         assert!(
-            dao_a_entry.token_balance >= 0.0,
-            "DAO-A should have token balance"
+            dao_a_entry.token_balance > dao_b_entry.token_balance,
+            "seller should earn more than buyer-only payer"
         );
     }
 
@@ -384,6 +375,59 @@ mod tests {
         let result = node.heartbeat();
         assert!(result.is_none());
         assert_eq!(node.tick, 1);
+    }
+
+    #[test]
+    fn test_settlement_updates_existing_sidechain_entries() {
+        let mut node = JsonicNode::new();
+
+        let mut seller = RegisteredDAO::register("Seller", "Manufacturing");
+        let mut buyer = RegisteredDAO::register("Buyer", "Retail");
+        let seller_id = seller.id().clone();
+        let buyer_id = buyer.id().clone();
+
+        node.register_dao(seller.dao.clone());
+        node.register_dao(buyer.dao.clone());
+
+        let invoice = seller.create_invoice(&buyer_id, 25_000.0, "USD", "machine parts");
+        let invoice_id = invoice.id.clone();
+        let payment = buyer.create_payment(&seller_id, 25_000.0, "USD", &invoice_id, "settlement");
+        let payment_id = payment.id.clone();
+
+        node.submit_transaction(invoice).expect("submit invoice");
+        node.submit_transaction(payment).expect("submit payment");
+
+        assert_eq!(node.side_chains[&seller_id].height(), 0);
+        assert_eq!(node.side_chains[&buyer_id].height(), 0);
+        assert_eq!(node.pending_count(), 2);
+
+        node.heartbeat();
+
+        assert_eq!(node.pending_count(), 0);
+
+        let seller_chain = &node.side_chains[&seller_id];
+        assert!(seller_chain.pending.is_empty());
+        assert_eq!(seller_chain.height(), 1);
+        assert_eq!(seller_chain.blocks[0].transactions.len(), 1);
+        assert_eq!(seller_chain.blocks[0].transactions[0].id, invoice_id);
+        assert_eq!(
+            seller_chain.blocks[0].transactions[0].status,
+            TransactionStatus::Settled
+        );
+        assert_eq!(seller_chain.current_balance().revenue, 25_000.0);
+        assert_eq!(seller_chain.current_balance().accounts_receivable, 0.0);
+
+        let buyer_chain = &node.side_chains[&buyer_id];
+        assert!(buyer_chain.pending.is_empty());
+        assert_eq!(buyer_chain.height(), 1);
+        assert_eq!(buyer_chain.blocks[0].transactions.len(), 1);
+        assert_eq!(buyer_chain.blocks[0].transactions[0].id, payment_id);
+        assert_eq!(
+            buyer_chain.blocks[0].transactions[0].status,
+            TransactionStatus::Settled
+        );
+        assert_eq!(buyer_chain.current_balance().expenses, 25_000.0);
+        assert_eq!(buyer_chain.current_balance().accounts_payable, 0.0);
     }
 
     #[test]

@@ -54,11 +54,7 @@ impl SideChain {
     /// Submit a transaction to the pending pool.
     /// Automatically generates a new block if Materiality is reached.
     pub fn submit_transaction(&mut self, tx: Transaction) -> Option<&SideChainBlock> {
-        // Track matched/settled transactions for relevance scoring
-        if tx.status == TransactionStatus::Matched || tx.status == TransactionStatus::Settled {
-            self.matched_tx_count_since_solstice += 1;
-            self.matched_tx_value_since_solstice += tx.amount;
-        }
+        self.track_verified_transition(None, &tx);
 
         self.pending.push(tx);
 
@@ -70,10 +66,86 @@ impl SideChain {
         }
     }
 
+    /// Update an existing pending or sealed transaction status.
+    ///
+    /// Pending transactions are preferred because normal Jsonic flow admits an
+    /// invoice or payment as unmatched, then seals it only after POT matching or
+    /// settlement. The block rewrite path keeps older snapshots loadable if a
+    /// previously sealed transaction must be corrected.
+    pub fn set_transaction_status(&mut self, tx_id: &str, status: TransactionStatus) -> bool {
+        if let Some(index) = self.pending.iter().position(|tx| tx.id == tx_id) {
+            let old_status = self.pending[index].status;
+            if old_status != status {
+                self.pending[index].status = status;
+                let tx = self.pending[index].clone();
+                self.track_verified_transition(Some(old_status), &tx);
+            }
+
+            if self.should_create_block() {
+                self.create_block();
+            }
+            return true;
+        }
+
+        for block_index in 0..self.blocks.len() {
+            if let Some(tx_index) = self.blocks[block_index]
+                .transactions
+                .iter()
+                .position(|tx| tx.id == tx_id)
+            {
+                let old_status = self.blocks[block_index].transactions[tx_index].status;
+                if old_status != status {
+                    self.blocks[block_index].transactions[tx_index].status = status;
+                    let tx = self.blocks[block_index].transactions[tx_index].clone();
+                    self.track_verified_transition(Some(old_status), &tx);
+                    self.recompute_from_block(block_index);
+                }
+                return true;
+            }
+        }
+
+        false
+    }
+
+    fn track_verified_transition(
+        &mut self,
+        old_status: Option<TransactionStatus>,
+        tx: &Transaction,
+    ) {
+        if old_status.is_none_or(|status| !Self::is_verified_status(status))
+            && Self::is_verified_status(tx.status)
+            && tx.tx_type == TransactionType::Invoice
+            && tx.from == self.dao_id
+        {
+            self.matched_tx_count_since_solstice += 1;
+            self.matched_tx_value_since_solstice += tx.amount;
+        }
+    }
+
+    fn is_verified_status(status: TransactionStatus) -> bool {
+        matches!(
+            status,
+            TransactionStatus::Matched | TransactionStatus::Settled
+        )
+    }
+
+    fn is_sealable(tx: &Transaction) -> bool {
+        Self::is_verified_status(tx.status) || tx.status == TransactionStatus::Invalid
+    }
+
     /// Check whether the pending transactions have reached the Materiality
     /// threshold relative to the total on-chain value.
     fn should_create_block(&self) -> bool {
-        let pending_value: f64 = self.pending.iter().map(|tx| tx.amount).sum();
+        let pending_value: f64 = self
+            .pending
+            .iter()
+            .filter(|tx| Self::is_sealable(tx))
+            .map(|tx| tx.amount)
+            .sum();
+
+        if pending_value == 0.0 {
+            return false;
+        }
 
         let total_on_chain_value = self.total_on_chain_value();
 
@@ -96,7 +168,15 @@ impl SideChain {
 
     /// Create a new block from pending transactions and append it.
     fn create_block(&mut self) {
-        let transactions: Vec<Transaction> = self.pending.drain(..).collect();
+        let pending = std::mem::take(&mut self.pending);
+        let (transactions, retained): (Vec<_>, Vec<_>) =
+            pending.into_iter().partition(Self::is_sealable);
+        self.pending = retained;
+
+        if transactions.is_empty() {
+            return;
+        }
+
         let previous_hash = self
             .blocks
             .last()
@@ -109,7 +189,8 @@ impl SideChain {
             .map(|b| b.closing_balance.clone())
             .unwrap_or_default();
 
-        let closing_balance = Self::apply_transactions(&opening_balance, &transactions);
+        let closing_balance =
+            Self::apply_transactions(&self.dao_id, &opening_balance, &transactions);
 
         let tx_hashes: Vec<Hash> = transactions
             .iter()
@@ -146,37 +227,93 @@ impl SideChain {
     }
 
     /// Apply a set of transactions to a balance sheet, producing updated balances.
-    fn apply_transactions(opening: &BalanceSheet, transactions: &[Transaction]) -> BalanceSheet {
+    fn apply_transactions(
+        dao_id: &DAOId,
+        opening: &BalanceSheet,
+        transactions: &[Transaction],
+    ) -> BalanceSheet {
         let mut balance = opening.clone();
 
         for tx in transactions {
             match (tx.tx_type, tx.status) {
-                // An invoice we sent = accounts receivable
-                (TransactionType::Invoice, TransactionStatus::Unmatched)
-                | (TransactionType::Invoice, TransactionStatus::Matched) => {
+                // A matched invoice is an open obligation. From the seller's
+                // perspective it is receivable; from the buyer's perspective it
+                // is payable.
+                (TransactionType::Invoice, TransactionStatus::Matched) if tx.from == *dao_id => {
                     balance.accounts_receivable += tx.amount;
                 }
-                // A settled invoice = revenue realized
-                (TransactionType::Invoice, TransactionStatus::Settled) => {
-                    balance.accounts_receivable -= tx.amount;
-                    balance.revenue += tx.amount;
-                }
-                // A payment we made = expense
-                (TransactionType::Payment, TransactionStatus::Matched)
-                | (TransactionType::Payment, TransactionStatus::Settled) => {
-                    balance.accounts_payable -= tx.amount;
-                    balance.expenses += tx.amount;
-                }
-                // An unmatched payment = accounts payable
-                (TransactionType::Payment, TransactionStatus::Unmatched) => {
+                (TransactionType::Invoice, TransactionStatus::Matched) if tx.to == *dao_id => {
                     balance.accounts_payable += tx.amount;
                 }
+                // A settled invoice realizes revenue for the seller. If a
+                // buyer records a settled invoice rather than a payment, treat
+                // it as the corresponding expense from that side-chain's view.
+                (TransactionType::Invoice, TransactionStatus::Settled) if tx.from == *dao_id => {
+                    balance.revenue += tx.amount;
+                }
+                (TransactionType::Invoice, TransactionStatus::Settled) if tx.to == *dao_id => {
+                    balance.expenses += tx.amount;
+                }
+                // A verified payment is the cash-side proof of settlement.
+                (TransactionType::Payment, TransactionStatus::Matched)
+                | (TransactionType::Payment, TransactionStatus::Settled)
+                    if tx.from == *dao_id =>
+                {
+                    balance.expenses += tx.amount;
+                }
+                (TransactionType::Payment, TransactionStatus::Matched)
+                | (TransactionType::Payment, TransactionStatus::Settled)
+                    if tx.to == *dao_id =>
+                {
+                    balance.revenue += tx.amount;
+                }
                 // Invalid transactions don't affect balances
-                (_, TransactionStatus::Invalid) => {}
+                (_, TransactionStatus::Invalid)
+                | (_, TransactionStatus::Unmatched)
+                | (TransactionType::Invoice, TransactionStatus::Matched)
+                | (TransactionType::Invoice, TransactionStatus::Settled)
+                | (TransactionType::Payment, TransactionStatus::Matched)
+                | (TransactionType::Payment, TransactionStatus::Settled) => {}
             }
         }
 
         balance
+    }
+
+    fn recompute_from_block(&mut self, start_index: usize) {
+        for index in start_index..self.blocks.len() {
+            let previous_hash = if index == 0 {
+                sha256_str("genesis")
+            } else {
+                self.blocks[index - 1].header.hash.clone()
+            };
+            let opening_balance = if index == 0 {
+                BalanceSheet::default()
+            } else {
+                self.blocks[index - 1].closing_balance.clone()
+            };
+            let transactions = self.blocks[index].transactions.clone();
+            let tx_hashes: Vec<Hash> = transactions
+                .iter()
+                .map(|tx| sha256_str(&serde_json::to_string(tx).unwrap_or_default()))
+                .collect();
+            let merkle = merkle_root(&tx_hashes);
+            let timestamp = self.blocks[index].header.timestamp;
+            let header_data = format!(
+                "{}:{}:{}:{}",
+                index,
+                previous_hash,
+                timestamp.to_rfc3339(),
+                merkle,
+            );
+            let hash = sha256_str(&header_data);
+
+            self.blocks[index].header.previous_hash = previous_hash;
+            self.blocks[index].header.merkle_root = merkle;
+            self.blocks[index].header.hash = hash;
+            self.blocks[index].closing_balance =
+                Self::apply_transactions(&self.dao_id, &opening_balance, &transactions);
+        }
     }
 
     /// Current chain height (number of blocks).
@@ -223,7 +360,7 @@ impl SideChain {
     /// Force-flush any pending transactions into a block,
     /// regardless of Materiality. Used before Solstice.
     pub fn flush_pending(&mut self) {
-        if !self.pending.is_empty() {
+        if self.pending.iter().any(Self::is_sealable) {
             self.create_block();
         }
     }
@@ -278,6 +415,40 @@ mod tests {
     }
 
     #[test]
+    fn test_unmatched_transaction_does_not_seal_block() {
+        let mut chain = SideChain::new("dao1".to_string());
+        let mut tx = make_test_invoice("dao1", "dao2", 10_000.0);
+        tx.status = TransactionStatus::Unmatched;
+
+        let result = chain.submit_transaction(tx);
+
+        assert!(result.is_none());
+        assert_eq!(chain.height(), 0);
+        assert_eq!(chain.pending.len(), 1);
+    }
+
+    #[test]
+    fn test_status_update_seals_verified_pending_once() {
+        let mut chain = SideChain::new("dao1".to_string());
+        let mut tx = make_test_invoice("dao1", "dao2", 500.0);
+        tx.status = TransactionStatus::Unmatched;
+        let tx_id = tx.id.clone();
+
+        assert!(chain.submit_transaction(tx).is_none());
+        assert!(chain.set_transaction_status(&tx_id, TransactionStatus::Settled));
+
+        assert_eq!(chain.height(), 1);
+        assert!(chain.pending.is_empty());
+        assert_eq!(chain.blocks[0].transactions.len(), 1);
+        assert_eq!(
+            chain.blocks[0].transactions[0].status,
+            TransactionStatus::Settled
+        );
+        assert_eq!(chain.current_balance().revenue, 500.0);
+        assert_eq!(chain.current_balance().accounts_receivable, 0.0);
+    }
+
+    #[test]
     fn test_balance_sheet_tracking() {
         let mut chain = SideChain::new("dao1".to_string());
 
@@ -286,6 +457,72 @@ mod tests {
 
         let balance = chain.current_balance();
         assert_eq!(balance.accounts_receivable, 500.0);
+    }
+
+    #[test]
+    fn test_settled_balances_are_from_dao_perspective() {
+        let mut seller_chain = SideChain::new("seller".to_string());
+        let mut buyer_chain = SideChain::new("buyer".to_string());
+
+        let mut invoice = make_test_invoice("seller", "buyer", 750.0);
+        invoice.status = TransactionStatus::Settled;
+
+        let mut buyer = RegisteredDAO::register("Buyer", "Retail");
+        let mut payment = buyer.create_payment(
+            &"seller".to_string(),
+            750.0,
+            "USD",
+            &invoice.id,
+            "settlement",
+        );
+        payment.from = "buyer".to_string();
+        payment.to = "seller".to_string();
+        payment.status = TransactionStatus::Settled;
+
+        seller_chain.submit_transaction(invoice);
+        buyer_chain.submit_transaction(payment);
+
+        let seller_balance = seller_chain.current_balance();
+        assert_eq!(seller_balance.revenue, 750.0);
+        assert_eq!(seller_balance.accounts_receivable, 0.0);
+        assert_eq!(seller_balance.expenses, 0.0);
+
+        let buyer_balance = buyer_chain.current_balance();
+        assert_eq!(buyer_balance.expenses, 750.0);
+        assert_eq!(buyer_balance.accounts_payable, 0.0);
+        assert_eq!(buyer_balance.revenue, 0.0);
+    }
+
+    #[test]
+    fn test_only_seller_invoices_count_toward_period_activity() {
+        let mut seller_chain = SideChain::new("seller".to_string());
+        let mut buyer_chain = SideChain::new("buyer".to_string());
+
+        let mut invoice = make_test_invoice("seller", "buyer", 750.0);
+        invoice.status = TransactionStatus::Settled;
+
+        let mut buyer = RegisteredDAO::register("Buyer", "Retail");
+        let mut payment = buyer.create_payment(
+            &"seller".to_string(),
+            750.0,
+            "USD",
+            &invoice.id,
+            "settlement",
+        );
+        payment.from = "buyer".to_string();
+        payment.to = "seller".to_string();
+        payment.status = TransactionStatus::Settled;
+
+        seller_chain.submit_transaction(invoice);
+        buyer_chain.submit_transaction(payment);
+
+        let seller_snapshot = seller_chain.solstice_snapshot(0.0);
+        assert_eq!(seller_snapshot.matched_tx_count, 1);
+        assert_eq!(seller_snapshot.matched_tx_value, 750.0);
+
+        let buyer_snapshot = buyer_chain.solstice_snapshot(0.0);
+        assert_eq!(buyer_snapshot.matched_tx_count, 0);
+        assert_eq!(buyer_snapshot.matched_tx_value, 0.0);
     }
 
     #[test]
