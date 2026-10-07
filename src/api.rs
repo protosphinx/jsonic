@@ -41,6 +41,8 @@ pub type SharedNode = Arc<RwLock<JsonicNode>>;
 pub fn build_router(node: SharedNode) -> Router {
     Router::new()
         .route("/", get(index))
+        .route("/robots.txt", get(robots))
+        .route("/sitemap.xml", get(sitemap))
         .route(
             "/assets/marketing/jsonic-hero-factory-ledger.png",
             get(hero_factory_asset),
@@ -119,6 +121,18 @@ async fn index() -> Html<String> {
     Html(marketing_page())
 }
 
+async fn robots() -> impl IntoResponse {
+    ([("content-type", "text/plain; charset=utf-8")], "User-agent: *\nAllow: /\n\nSitemap: https://jsonic.org/sitemap.xml\n")
+}
+
+async fn sitemap() -> impl IntoResponse {
+    ([("content-type", "application/xml; charset=utf-8")], r#"<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url><loc>https://jsonic.org/</loc></url>
+</urlset>
+"#)
+}
+
 async fn hero_factory_asset() -> impl IntoResponse {
     (
         [
@@ -155,6 +169,10 @@ const MARKETING_HEAD: &str = r##"<!doctype html>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Jsonic L1 - Proof of Transaction for Manufacturing</title>
+  <link rel="canonical" href="https://jsonic.org/">
+  <meta property="og:url" content="https://jsonic.org/">
+  <meta property="og:title" content="Jsonic L1 - Proof of Transaction for Manufacturing">
+  <meta property="og:type" content="website">
   <meta name="description" content="Jsonic is a Layer 1 protocol that rewards verified manufacturing, sales, and B2B commerce with PageRank-weighted Proof of Transaction.">
   <style>
     :root {
@@ -892,6 +910,7 @@ GET  /reputation/:dao_id</pre>
   <footer class="footer">
     <div class="footer-inner">
       <span>Jsonic L1 - Proof of Transaction for manufacturing economies</span>
+      <span>Related projects: <a href="https://bomwiki.com/">BOMwiki</a> explains how products are made; <a href="https://www.erp.ai/">ERP.AI</a> manages business records and workflows.</span>
       <span>Production, settlement, and reputation on-chain. · built with <a href="https://proto.erp.ai">Proto</a></span>
     </div>
   </footer>
@@ -1095,6 +1114,27 @@ mod tests {
         assert!(html.contains("Proof of Transaction"));
         assert!(html.contains("/assets/marketing/jsonic-hero-factory-ledger.png"));
         assert!(html.contains("GET  /health"));
+    }
+
+    #[tokio::test]
+    async fn discovery_routes_serve_canonical_public_page() {
+        let node = fresh_node();
+        let app = build_router(node.clone());
+        for (path, content_type, marker) in [
+            ("/robots.txt", "text/plain; charset=utf-8", "Sitemap: https://jsonic.org/sitemap.xml"),
+            ("/sitemap.xml", "application/xml; charset=utf-8", "<loc>https://jsonic.org/</loc>"),
+        ] {
+            let response = app.clone().oneshot(
+                Request::builder().uri(path).body(Body::empty()).unwrap()
+            ).await.unwrap();
+            assert_eq!(response.status(), StatusCode::OK);
+            assert_eq!(response.headers()["content-type"], content_type);
+            let body = to_bytes(response.into_body(), usize::MAX).await.unwrap();
+            let text = String::from_utf8(body.to_vec()).unwrap();
+            assert!(text.contains(marker));
+            assert!(!text.contains("/transactions"));
+        }
+        assert_eq!(node.read().await.tick, 0);
     }
 
     #[tokio::test]
