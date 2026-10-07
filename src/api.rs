@@ -892,7 +892,7 @@ GET  /reputation/:dao_id</pre>
   <footer class="footer">
     <div class="footer-inner">
       <span>Jsonic L1 - Proof of Transaction for manufacturing economies</span>
-      <span>Production, settlement, and reputation on-chain.</span>
+      <span>Production, settlement, and reputation on-chain. · built with <a href="https://proto.erp.ai">Proto</a></span>
     </div>
   </footer>
 </body>
